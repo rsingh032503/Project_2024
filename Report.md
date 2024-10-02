@@ -3,10 +3,10 @@
 ## 0. Group number: 
 
 ## 1. Group members:
-1. First
-2. Second
-3. Third
-4. Fourth
+1. Rahul Singh
+2. Kevin Thomas
+3. Anthony Ciardelli
+4. Brandon Thomas
 
 ## 2. Project topic (e.g., parallel sorting algorithms)
 
