@@ -145,7 +145,56 @@ function main():
 
 
 #### Radix Sort
+```
+// Function to perform counting sort for a specific digit
+function countingSort(array, exp):
+    // Start Caliper measurement for counting
+    // Count occurrences of each digit in the given place value
+    // End Caliper measurement for counting
 
+    // Calculate cumulative count
+    // Build the output array
+    
+    // Start Caliper measurement for copying output
+    // Copy the output array to the original array
+    // End Caliper measurement for copying output
+
+// Main MPI Radix Sort function
+function mpiRadixSort(local_data, world_rank, world_size):
+    // Find local maximum element
+    
+    // Start Caliper measurement for MPI reduce
+    // Use MPI_Allreduce to find global maximum across all processes
+    // End Caliper measurement for MPI reduce
+
+    // Perform Radix Sort
+    for exp = 1 to max_element:
+        // Start Caliper measurement for local counting sort
+        countingSort(local_data, exp)
+        // End Caliper measurement for local counting sort
+
+        // Start Caliper measurement for MPI all-to-all
+        // Redistribute data across processes based on current digit
+        // Use MPI_Alltoallv for flexible data redistribution
+        // End Caliper measurement for MPI all-to-all
+
+        // Start Caliper measurement for merging sorted chunks
+        // Merge the received sorted chunks
+        // End Caliper measurement for merging sorted chunks
+
+// Main function
+function main():
+    // Initialize MPI
+    // Get world_rank and world_size
+    // Read or generate input data
+    
+    // Start Caliper measurement for entire MPI Radix Sort
+    mpiRadixSort(local_data, world_rank, world_size)
+    // End Caliper measurement for entire MPI Radix Sort
+    
+    // Gather results to rank 0 or write to file
+    // Finalize MPI
+```
 ### 2c. Evaluation plan - what and how will you measure and compare
 - Input sizes, Input types
 - Strong scaling (same problem size, increase number of processors/nodes)
