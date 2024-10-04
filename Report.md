@@ -82,6 +82,65 @@ function main():
 
 
 #### Merge Sort
+```
+// Function to merge two sorted arrays
+function merge(left_array, right_array):
+    // Merge the two arrays and return the result
+
+// Function to perform local merge sort
+function localMergeSort(array):
+    // If array size > 1:
+    //     Divide array into two halves
+    //     Recursively sort both halves
+    //     Merge the sorted halves
+
+// Main MPI Merge Sort function
+function mpiMergeSort(local_data, world_rank, world_size):
+    // Start Caliper measurement for local sort
+    
+    // Perform local merge sort on this process's data
+    localMergeSort(local_data)
+    
+    // End Caliper measurement for local sort
+
+    // Parallel merge phase
+    for step = 1 to log2(world_size):
+        if this process should receive data:
+            // Start Caliper measurement for MPI receive and merge
+            
+            // Receive data from partner process
+            // Merge received data with local data
+            
+            // End Caliper measurement for MPI receive and merge
+        else if this process should send data:
+            // Start Caliper measurement for MPI send
+            
+            // Send local data to partner process
+            
+            // End Caliper measurement for MPI send
+            
+            // Break out of the loop as this process is done
+
+    return local_data
+
+// Main function
+function main():
+    // Initialize MPI
+    
+    // Get world_rank and world_size
+    
+    // Read or generate input data
+    
+    // Start Caliper measurement for entire MPI Merge Sort
+    
+    sorted_data = mpiMergeSort(local_data, world_rank, world_size)
+    
+    // End Caliper measurement for entire MPI Merge Sort
+    
+    // Gather results to rank 0 or write to file
+    
+    // Finalize MPI
+```
 
 
 
