@@ -77,6 +77,58 @@ function main():
 ```
 
 #### Bitonic Sort
+```
+// Function to compare and exchange two elements
+function compareExchange(data, i, j, ascending):
+    // Compare elements at indices i and j
+    // Swap if they are in the wrong order based on 'ascending' flag
+
+// Function to merge a bitonic sequence
+function bitonicMerge(data, low, count, ascending):
+    // If count > 1:
+    //     Find the greatest power of 2 less than count
+    //     Compare-exchange pairs of elements
+    //     Recursively merge the two halves
+
+// Function to generate a bitonic sequence
+function bitonicSort(data, low, count, ascending):
+    // If count > 1:
+    //     Recursively sort first half in ascending order
+    //     Recursively sort second half in descending order
+    //     Merge the resulting bitonic sequence
+
+// Main MPI Bitonic Sort function
+function mpiBitonicSort(local_data, world_rank, world_size):
+    total_size = local_data.size() * world_size
+    local_size = local_data.size()
+
+    // Bitonic sort stages
+    for k = 2 to total_size:
+        for j = k/2 to 1 (dividing by 2 each iteration):
+            // Start Caliper measurement for local compare-exchange
+            for each element i in local_data:
+                // Calculate the index of the element to compare with
+                // If the partner element is in the same process:
+                //     Perform local compare-exchange
+                // Else:
+                //     Start Caliper measurement for MPI exchange
+                //     Use MPI_Sendrecv to exchange and compare elements with partner process
+                //     End Caliper measurement for MPI exchange
+            // End Caliper measurement for local compare-exchange
+
+// Main function
+function main():
+    // Initialize MPI
+    // Get world_rank and world_size
+    // Read or generate input data
+    
+    // Start Caliper measurement for entire MPI Bitonic Sort
+    mpiBitonicSort(local_data, world_rank, world_size)
+    // End Caliper measurement for entire MPI Bitonic Sort
+    
+    // Gather results to rank 0 or write to file
+    // Finalize MPI
+```
 
 
 
