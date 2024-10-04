@@ -1,7 +1,6 @@
 # CSCE 435 Group project
 
-## 0. Group number: 
-9
+## 0. Group number: 9
 ## 1. Group members:
 1. Rahul Singh
 2. Kevin Thomas
@@ -14,10 +13,10 @@ We will be using iMessage as our primary method of communication. We will share 
 
 ### 2a. Brief project description (what algorithms will you be comparing and on what architectures)
 
-- Bitonic Sort:
-- Quick Sort:
-- Merge Sort:
-- Radix Sort:
+- Bitonic Sort
+- Quick Sort
+- Merge Sort
+- Radix Sort
 
 ### 2b. Pseudocode for each parallel algorithm
 - For MPI programs, include MPI calls you will use to coordinate between processes
