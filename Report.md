@@ -248,5 +248,10 @@ function main():
 ```
 ### 2c. Evaluation plan - what and how will you measure and compare
 - Input sizes, Input types
+- 2^16, 2^18, 2^20, 2^22, 2^24, 2^26, 2^28; Sorted, Random, Reverse sorted, 1% perturbed
+  
 - Strong scaling (same problem size, increase number of processors/nodes)
+- 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 processors
+  
 - Weak scaling (increase problem size, increase number of processors)
+- 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 processors 
