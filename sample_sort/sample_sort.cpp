@@ -43,8 +43,9 @@ void sample_sort(int* arr, int size, int num_procs, int rank) {
     CALI_MARK_BEGIN("comm");
     CALI_MARK_BEGIN("comm_small");
     // Gather samples
-    int sample_size = num_procs - 1;
-    int* samples = new int[sample_size * num_procs];
+    int sample_size = std::max(1, (size / num_procs) / 100);  // Adjusted sample size
+    int total_samples = sample_size * num_procs;
+    int* samples = new int[total_samples];
     for (int i = 0; i < sample_size; i++) {
         samples[i] = arr[i * (size / sample_size)];
     }
@@ -55,10 +56,10 @@ void sample_sort(int* arr, int size, int num_procs, int rank) {
     CALI_MARK_BEGIN("comp");
     CALI_MARK_BEGIN("comp_small");
     // Sort samples and select pivots
-    std::sort(samples, samples + sample_size * num_procs);
+    std::sort(samples, samples + total_samples);
     int* pivots = new int[num_procs - 1];
     for (int i = 0; i < num_procs - 1; i++) {
-        pivots[i] = samples[(i + 1) * sample_size];
+        pivots[i] = samples[(i + 1) * total_samples / num_procs];
     }
     CALI_MARK_END("comp_small");
     CALI_MARK_END("comp");
@@ -113,7 +114,7 @@ void sample_sort(int* arr, int size, int num_procs, int rank) {
     CALI_MARK_END("comp");
 
     // Copy sorted data back to original array
-    std::copy(recv_buf, recv_buf + size, arr);
+    std::copy(recv_buf, recv_buf + recv_total, arr);
 
     // Clean up
     delete[] samples;
@@ -144,16 +145,16 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
-    if (argc != 3) {
+    if (argc != 2) {
         if (rank == 0) {
-            printf("Usage: %s <exponent> <input_type>\n", argv[0]);
+            printf("Usage: %s <exponent>\n", argv[0]);
         }
         MPI_Finalize();
         return 1;
     }
 
     int exponent = atoi(argv[1]);
-    const char* input_type = argv[2];
+    const char* input_type = "random";
     int total_size = 1 << exponent;
     int local_size = total_size / num_procs;
 
