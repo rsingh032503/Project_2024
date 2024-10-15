@@ -14,7 +14,7 @@ We will be using iMessage as our primary method of communication. We will share 
 ### 2a. Brief project description (what algorithms will you be comparing and on what architectures)
 
 - Bitonic Sort:
-- Sample Sort:
+- Quick Sort:
 - Merge Sort:
 - Radix Sort:
 
