@@ -92,13 +92,16 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     CALI_MARK_BEGIN("Communication");
     //determine how much data is being sent to each processor
     CALI_MARK_BEGIN("COMM - Send");
-    int send_size[num_procs];
+    int send_size[num_procs]{0};
     for(int i = 0; i < num_procs; i++){
         send_size[i] = splits[i].size();
     }
 
     // send the data to their respective processors
     for(int i = 0; i < num_procs; i++){
+        if(send_size[i] == 0){
+            continue;
+        }
         MPI_Send(splits[i].data(),send_size[i],MPI_INT,i,0,MPI_COMM_WORLD);
     }
 
@@ -107,10 +110,10 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     // determine how much data is being recieved from each processor
     CALI_MARK_BEGIN("COMM - Rec");
     int rec_count = 0;
-    int rec_size[num_procs];
+    int rec_size[num_procs]{0};
 
     CALI_MARK_BEGIN("Scatter - recieve sizes");
-    MPI_Scatter(&send_size,1,MPI_INT,rec_size,num_procs,MPI_INT,rank,MPI_COMM_WORLD);
+    MPI_Scatter(&send_size,1,MPI_INT,&rec_size,num_procs,MPI_INT,rank,MPI_COMM_WORLD);
     CALI_MARK_END("Scatter - recieve sizes");
     for(int i = 0; i < num_procs; i++){
         rec_count += rec_size[i];
@@ -125,6 +128,9 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
 
     // receive the data from the other processors
     for(int i = 0; i < num_procs; i++){
+        if(rec_size[i] == 0){
+            continue;
+        }
         MPI_Status s;
         MPI_Recv(rec + rec_ind[i],rec_size[i],MPI_INT,i,0,MPI_COMM_WORLD,&s);
     }
