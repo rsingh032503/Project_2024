@@ -32,4 +32,4 @@ void generate_data(int* arr, int size, const char* type, int mpi_rank, int mpi_s
             arr[idx] = dis(gen);
         }
     }
-}
+};
