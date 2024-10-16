@@ -1,136 +1,20 @@
 #include <mpi.h>
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
+#include <stdio.h>
+#include <stdlib.h>
 #include <algorithm>
-#include <chrono>
-#include <random>
+#include <vector>
+#include <cmath>
 #include <caliper/cali.h>
-#include <caliper/cali-manager.h>
 
-void generate_data(int* arr, int size, const char* type) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, size - 1);
-
-    if (strcmp(type, "sorted") == 0) {
-        for (int i = 0; i < size; i++) {
-            arr[i] = i;
-        }
-    } else if (strcmp(type, "reverse_sorted") == 0) {
-        for (int i = 0; i < size; i++) {
-            arr[i] = size - i - 1;
-        }
-    } else if (strcmp(type, "random") == 0) {
-        for (int i = 0; i < size; i++) {
-            arr[i] = dis(gen);
-        }
-    } else if (strcmp(type, "perturbed") == 0) {
-        for (int i = 0; i < size; i++) {
-            arr[i] = i;
-        }
-        int perturb_count = size / 100;
-        for (int i = 0; i < perturb_count; i++) {
-            int idx = dis(gen);
-            arr[idx] = dis(gen);
-        }
+void generate_data(int* data, int size) {
+    for (int i = 0; i < size; i++) {
+        data[i] = rand() % size;  // Random numbers between 0 and size-1
     }
 }
 
-void sample_sort(int* arr, int size, int num_procs, int rank) {
-    CALI_CXX_MARK_FUNCTION;
-
-    CALI_MARK_BEGIN("comm");
-    CALI_MARK_BEGIN("comm_small");
-    // Gather samples
-    int sample_size = std::max(1, (size / num_procs) / 100);  // Adjusted sample size
-    int total_samples = sample_size * num_procs;
-    int* samples = new int[total_samples];
-    for (int i = 0; i < sample_size; i++) {
-        samples[i] = arr[i * (size / sample_size)];
-    }
-    MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, samples, sample_size, MPI_INT, MPI_COMM_WORLD);
-    CALI_MARK_END("comm_small");
-    CALI_MARK_END("comm");
-
-    CALI_MARK_BEGIN("comp");
-    CALI_MARK_BEGIN("comp_small");
-    // Sort samples and select pivots
-    std::sort(samples, samples + total_samples);
-    int* pivots = new int[num_procs - 1];
-    for (int i = 0; i < num_procs - 1; i++) {
-        pivots[i] = samples[(i + 1) * total_samples / num_procs];
-    }
-    CALI_MARK_END("comp_small");
-    CALI_MARK_END("comp");
-
-    // Count elements for each bucket
-    int* send_counts = new int[num_procs]();
-    for (int i = 0; i < size; i++) {
-        int bucket = std::upper_bound(pivots, pivots + num_procs - 1, arr[i]) - pivots;
-        send_counts[bucket]++;
-    }
-
-    CALI_MARK_BEGIN("comm");
-    CALI_MARK_BEGIN("comm_small");
-    // Alltoall to get receive counts
-    int* recv_counts = new int[num_procs];
-    MPI_Alltoall(send_counts, 1, MPI_INT, recv_counts, 1, MPI_INT, MPI_COMM_WORLD);
-    CALI_MARK_END("comm_small");
-    CALI_MARK_END("comm");
-
-    // Calculate displacements
-    int* send_displs = new int[num_procs];
-    int* recv_displs = new int[num_procs];
-    send_displs[0] = recv_displs[0] = 0;
-    for (int i = 1; i < num_procs; i++) {
-        send_displs[i] = send_displs[i-1] + send_counts[i-1];
-        recv_displs[i] = recv_displs[i-1] + recv_counts[i-1];
-    }
-
-    // Prepare send buffer
-    int* send_buf = new int[size];
-    int* send_indices = new int[num_procs]();
-    for (int i = 0; i < size; i++) {
-        int bucket = std::upper_bound(pivots, pivots + num_procs - 1, arr[i]) - pivots;
-        send_buf[send_displs[bucket] + send_indices[bucket]++] = arr[i];
-    }
-
-    CALI_MARK_BEGIN("comm");
-    CALI_MARK_BEGIN("comm_large");
-    // Alltoallv to redistribute data
-    int recv_total = recv_displs[num_procs-1] + recv_counts[num_procs-1];
-    int* recv_buf = new int[recv_total];
-    MPI_Alltoallv(send_buf, send_counts, send_displs, MPI_INT,
-                  recv_buf, recv_counts, recv_displs, MPI_INT, MPI_COMM_WORLD);
-    CALI_MARK_END("comm_large");
-    CALI_MARK_END("comm");
-
-    CALI_MARK_BEGIN("comp");
-    CALI_MARK_BEGIN("comp_large");
-    // Sort received data
-    std::sort(recv_buf, recv_buf + recv_total);
-    CALI_MARK_END("comp_large");
-    CALI_MARK_END("comp");
-
-    // Copy sorted data back to original array
-    std::copy(recv_buf, recv_buf + recv_total, arr);
-
-    // Clean up
-    delete[] samples;
-    delete[] pivots;
-    delete[] send_counts;
-    delete[] recv_counts;
-    delete[] send_displs;
-    delete[] recv_displs;
-    delete[] send_buf;
-    delete[] send_indices;
-    delete[] recv_buf;
-}
-
-bool check_sorted(int* arr, int size) {
+bool is_sorted(int* data, int size) {
     for (int i = 1; i < size; i++) {
-        if (arr[i] < arr[i-1]) {
+        if (data[i] < data[i-1]) {
             return false;
         }
     }
@@ -139,49 +23,207 @@ bool check_sorted(int* arr, int size) {
 
 int main(int argc, char** argv) {
     CALI_MARK_BEGIN("main");
-
-    int rank, num_procs;
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-
+    
     if (argc != 2) {
-        if (rank == 0) {
-            printf("Usage: %s <exponent>\n", argv[0]);
-        }
-        MPI_Finalize();
+        printf("Usage: %s <power_of_2> <num_processes>\n", argv[0]);
         return 1;
     }
 
-    int exponent = atoi(argv[1]);
-    const char* input_type = "random";
-    int total_size = 1 << exponent;
-    int local_size = total_size / num_procs;
+    int power = atoi(argv[1]);
+    int array_size = 1 << power;  // 2^power
+    
+    int rank, size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    int* local_arr = new int[local_size];
-
-    CALI_MARK_BEGIN("data_init_runtime");
-    generate_data(local_arr, local_size, input_type);
-    CALI_MARK_END("data_init_runtime");
-
-    // Sample Sort
-    CALI_MARK_BEGIN("sample_sort");
-    sample_sort(local_arr, local_size, num_procs, rank);
-    CALI_MARK_END("sample_sort");
-
-    // Check correctness
-    CALI_MARK_BEGIN("correctness_check");
-    bool local_sorted = check_sorted(local_arr, local_size);
-    bool globally_sorted;
-    MPI_Allreduce(&local_sorted, &globally_sorted, 1, MPI_C_BOOL, MPI_LAND, MPI_COMM_WORLD);
+    // Create duplicate communicator
+    MPI_Comm comm_dup;
+    MPI_Comm_dup(MPI_COMM_WORLD, &comm_dup);
+    
+    // Calculate local array size
+    int local_size = array_size / size;
+    int* local_data = new int[local_size];
+    
+    // Generate data on rank 0 and distribute
+    int* global_data = nullptr;
     if (rank == 0) {
-        printf("Sorting %s\n", globally_sorted ? "successful" : "failed");
+        CALI_MARK_BEGIN("data_init_runtime");
+        global_data = new int[array_size];
+        generate_data(global_data, array_size);
+        CALI_MARK_END("data_init_runtime");
     }
-    CALI_MARK_END("correctness_check");
-
-    delete[] local_arr;
+    
+    CALI_MARK_BEGIN("comm");
+    CALI_MARK_BEGIN("comm_large");
+    MPI_Scatter(global_data, local_size, MPI_INT, 
+                local_data, local_size, MPI_INT, 
+                0, comm_dup);
+    CALI_MARK_END("comm_large");
+    CALI_MARK_END("comm");
+    
+    // Local sort
+    CALI_MARK_BEGIN("comp");
+    CALI_MARK_BEGIN("comp_large");
+    std::sort(local_data, local_data + local_size);
+    CALI_MARK_END("comp_large");
+    CALI_MARK_END("comp");
+    
+    // Choose regular samples
+    int samples_per_proc = size - 1;
+    int sample_stride = local_size / samples_per_proc;
+    std::vector<int> local_samples(samples_per_proc);
+    
+    CALI_MARK_BEGIN("comp");
+    CALI_MARK_BEGIN("comp_small");
+    for (int i = 0; i < samples_per_proc; i++) {
+        local_samples[i] = local_data[i * sample_stride];
+    }
+    CALI_MARK_END("comp_small");
+    CALI_MARK_END("comp");
+    
+    // Gather samples to rank 0
+    std::vector<int> all_samples;
+    if (rank == 0) {
+        all_samples.resize(size * samples_per_proc);
+    }
+    
+    CALI_MARK_BEGIN("comm");
+    CALI_MARK_BEGIN("comm_small");
+    MPI_Gather(local_samples.data(), samples_per_proc, MPI_INT,
+               all_samples.data(), samples_per_proc, MPI_INT,
+               0, comm_dup);
+    CALI_MARK_END("comm_small");
+    CALI_MARK_END("comm");
+    
+    // Choose and broadcast splitters
+    std::vector<int> splitters(size - 1);
+    if (rank == 0) {
+        CALI_MARK_BEGIN("comp");
+        CALI_MARK_BEGIN("comp_small");
+        std::sort(all_samples.begin(), all_samples.end());
+        for (int i = 0; i < size - 1; i++) {
+            splitters[i] = all_samples[(i + 1) * size * samples_per_proc / size];
+        }
+        CALI_MARK_END("comp_small");
+        CALI_MARK_END("comp");
+    }
+    
+    CALI_MARK_BEGIN("comm");
+    CALI_MARK_BEGIN("comm_small");
+    MPI_Bcast(splitters.data(), size - 1, MPI_INT, 0, comm_dup);
+    CALI_MARK_END("comm_small");
+    CALI_MARK_END("comm");
+    
+    // Count elements going to each processor
+    std::vector<int> send_counts(size, 0);
+    CALI_MARK_BEGIN("comp");
+    CALI_MARK_BEGIN("comp_large");
+    for (int i = 0; i < local_size; i++) {
+        int dest = 0;
+        while (dest < size - 1 && local_data[i] >= splitters[dest]) {
+            dest++;
+        }
+        send_counts[dest]++;
+    }
+    CALI_MARK_END("comp_large");
+    CALI_MARK_END("comp");
+    
+    // All-to-all communication
+    std::vector<int> recv_counts(size);
+    CALI_MARK_BEGIN("comm");
+    CALI_MARK_BEGIN("comm_small");
+    MPI_Alltoall(send_counts.data(), 1, MPI_INT,
+                 recv_counts.data(), 1, MPI_INT,
+                 comm_dup);
+    CALI_MARK_END("comm_small");
+    CALI_MARK_END("comm");
+    
+    // Calculate displacements
+    std::vector<int> send_displs(size), recv_displs(size);
+    int send_total = 0, recv_total = 0;
+    for (int i = 0; i < size; i++) {
+        send_displs[i] = send_total;
+        recv_displs[i] = recv_total;
+        send_total += send_counts[i];
+        recv_total += recv_counts[i];
+    }
+    
+    // Prepare send buffer
+    std::vector<int> send_buffer(local_size);
+    std::vector<int> send_pos = send_displs;
+    
+    CALI_MARK_BEGIN("comp");
+    CALI_MARK_BEGIN("comp_large");
+    for (int i = 0; i < local_size; i++) {
+        int dest = 0;
+        while (dest < size - 1 && local_data[i] >= splitters[dest]) {
+            dest++;
+        }
+        send_buffer[send_pos[dest]++] = local_data[i];
+    }
+    CALI_MARK_END("comp_large");
+    CALI_MARK_END("comp");
+    
+    // All-to-all exchange
+    std::vector<int> recv_buffer(recv_total);
+    CALI_MARK_BEGIN("comm");
+    CALI_MARK_BEGIN("comm_large");
+    MPI_Alltoallv(send_buffer.data(), send_counts.data(), send_displs.data(), MPI_INT,
+                  recv_buffer.data(), recv_counts.data(), recv_displs.data(), MPI_INT,
+                  comm_dup);
+    CALI_MARK_END("comm_large");
+    CALI_MARK_END("comm");
+    
+    // Final local sort
+    CALI_MARK_BEGIN("comp");
+    CALI_MARK_BEGIN("comp_large");
+    std::sort(recv_buffer.begin(), recv_buffer.end());
+    CALI_MARK_END("comp_large");
+    CALI_MARK_END("comp");
+    
+    // Gather all sorted data to rank 0 for verification
+    int* final_data = nullptr;
+    std::vector<int> final_counts(size);
+    std::vector<int> final_displs(size);
+    
+    CALI_MARK_BEGIN("comm");
+    CALI_MARK_BEGIN("comm_small");
+    MPI_Gather(&recv_total, 1, MPI_INT,
+               final_counts.data(), 1, MPI_INT,
+               0, comm_dup);
+    CALI_MARK_END("comm_small");
+    CALI_MARK_END("comm");
+    
+    if (rank == 0) {
+        int total = 0;
+        for (int i = 0; i < size; i++) {
+            final_displs[i] = total;
+            total += final_counts[i];
+        }
+        final_data = new int[array_size];
+    }
+    
+    CALI_MARK_BEGIN("comm");
+    CALI_MARK_BEGIN("comm_large");
+    MPI_Gatherv(recv_buffer.data(), recv_total, MPI_INT,
+                final_data, final_counts.data(), final_displs.data(), MPI_INT,
+                0, comm_dup);
+    CALI_MARK_END("comm_large");
+    CALI_MARK_END("comm");
+    
+    if (rank == 0) {
+        CALI_MARK_BEGIN("correctness_check");
+        bool sorted = is_sorted(final_data, array_size);
+        printf("Array %s sorted correctly\n", sorted ? "is" : "is not");
+        CALI_MARK_END("correctness_check");
+        delete[] final_data;
+        delete[] global_data;
+    }
+    
+    delete[] local_data;
+    MPI_Comm_free(&comm_dup);
     MPI_Finalize();
-
     CALI_MARK_END("main");
     return 0;
 }
