@@ -135,6 +135,7 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
 
 
 int main(int argc, char* argv[]) {
+    bool debug = true;
     cali::ConfigManager mgr;
     mgr.start();
 
@@ -164,22 +165,38 @@ int main(int argc, char* argv[]) {
     int local_size = total_size / num_procs;
 
     if(rank == 0){
-        printf("Starting Radix Sort with %i Processors with input size 2^%i and input type %s",
+        printf("Starting Radix Sort with %i Processors with input size 2^%i and input type %s\n",
                 num_procs, exponent, input_type);
+        printf("Total input size: %i\nInput/Processor: %i\n", total_size, local_size);
     }
 
+    if(debug){
+        printf("Starting Data Generation on Proc %i\n",rank);
+    }
     CALI_MARK_BEGIN("data_init_runtime");
     int* local_arr = new int[local_size];
     generate_data(local_arr, local_size, input_type, rank, num_procs);
     CALI_MARK_END("data_init_runtime");
 
+    if(debug){
+        printf("Starting Radix Sort on Proc %i\n", rank);
+    }
+
     CALI_MARK_BEGIN("MPI Radix Sort");
     MPI_RadixSort(local_arr, local_size, total_size, rank, num_procs);
     CALI_MARK_END("MPI Radix Sort");
 
+    if(debug){
+        printf("Starting Global Sort Check on Proc %i\n", rank);
+    }
+
     CALI_MARK_BEGIN("Check Global Sort");
     globally_sorted(local_arr, local_size, rank, num_procs);
     CALI_MARK_BEGIN("Check Global Sort");
+
+    if(debug){
+        printf("Finished on Proc %i\n", rank);
+    }
 
     CALI_MARK_END("main");
     MPI_Finalize();
