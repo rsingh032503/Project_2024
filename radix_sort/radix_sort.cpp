@@ -13,55 +13,49 @@
 #include "../generate_data.h"
 #include "../check_sorted.h"
 
+bool debug = true;
+
 // Function to perform counting sort for a specific digit
 void countingSort(int*& arr, int size, int exp){
-    CALI_MARK_BEGIN("Counting Sort");
+    
     // Start Caliper measurement for counting
-    CALI_MARK_BEGIN("Compute Frequency");
+    
     int freq_size = 1 << 8;
-    int freq[freq_size];
+    int freq[freq_size]{0};
     // Count occurrences of each digit in the given place value
     for(int i = 0; i < size; i++){
         freq[(arr[i] >> (8*exp)) % freq_size]++;
     }
-    CALI_MARK_END("Compute Frequency");
+    
     // End Caliper measurement for counting
 
-    CALI_MARK_BEGIN("Compute Cumulative Index");
+    
     // Calculate cumulative count
     for(int i = 1; i < freq_size; i++){
         freq[i] += freq[i-1];
     }
-    CALI_MARK_END("Compute Cumulative Index");
-    
     
     // Build the output array
-    CALI_MARK_BEGIN("Create Output Array");
+    
     int* res = new int[size];
     for(int i = size - 1; i >=0; i--){
         res[--freq[(arr[i] >> (8*exp)) % freq_size]] = arr[i];
     }
-    CALI_MARK_END("Create Output Array");
-
-    CALI_MARK_BEGIN("Copy Output to Original Array");
     delete arr;
     arr = res;
-    CALI_MARK_END("Copy Output to Original Array");
-    // End Caliper measurement for copying output
-    CALI_MARK_END("Counting Sort");
 };
 
 void LocalRadixSort(int*& arr, int size){
-    CALI_MARK_BEGIN("Local Radix Sort");
     for(int exponent = 0; exponent < 4; exponent++){
         countingSort(arr, size, exponent);
     }
-    CALI_MARK_END("Local Radix Sort");
 };
 
 void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs){
 
-    CALI_MARK_BEGIN("Bit Computations");
+    if(debug){
+        printf("Proc %i starting bit computations\n",rank);
+    }
     //find what bit the maximum number is at
     int most_sig_bit = 1;
     while(global_size >> most_sig_bit > 1){
@@ -75,46 +69,43 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     }
 
     int shift = most_sig_bit - num_sig_bits;
-    CALI_MARK_END("Bit Computations");
 
 
+    if(debug){
+        printf("Proc %i starting bitwise split\n",rank);
+    }
     //sort the data into respective buckets based on bits
-    CALI_MARK_BEGIN("Bitwise split");
     std::vector<std::vector<int>> splits(num_procs);
     for(int i = 0; i < size; i++){
         splits[arr[i] >> shift].push_back(arr[i]);
     }
 
     delete[] arr;
-    CALI_MARK_END("Bitwise split");
 
     
-    CALI_MARK_BEGIN("Communication");
     //determine how much data is being sent to each processor
-    CALI_MARK_BEGIN("COMM - Send");
+    
     int send_size[num_procs]{0};
     for(int i = 0; i < num_procs; i++){
         send_size[i] = splits[i].size();
     }
 
-    // send the data to their respective processors
-    for(int i = 0; i < num_procs; i++){
-        if(send_size[i] == 0){
-            continue;
-        }
-        MPI_Send(splits[i].data(),send_size[i],MPI_INT,i,0,MPI_COMM_WORLD);
-    }
-
-    CALI_MARK_END("COMM - Send");
-
+    CALI_MARK_BEGIN("comm");
+    
     // determine how much data is being recieved from each processor
-    CALI_MARK_BEGIN("COMM - Rec");
     int rec_count = 0;
     int rec_size[num_procs]{0};
 
-    CALI_MARK_BEGIN("Scatter - recieve sizes");
-    MPI_Scatter(&send_size,1,MPI_INT,&rec_size,num_procs,MPI_INT,rank,MPI_COMM_WORLD);
-    CALI_MARK_END("Scatter - recieve sizes");
+    if(debug){
+        printf("Proc %i starting scatter\n",rank);
+    }
+    CALI_MARK_BEGIN("comm_small");
+    for(int i = 0; i < num_procs; i++){
+        MPI_Scatter(&send_size,1,MPI_INT,(&rec_size) + i,num_procs,MPI_INT,i,MPI_COMM_WORLD);
+    }
+    CALI_MARK_END("comm_small");
+
+
     for(int i = 0; i < num_procs; i++){
         rec_count += rec_size[i];
     }
@@ -126,7 +117,23 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
         rec_ind[i] = rec_ind[i-1] + rec_size[i-1];
     }
 
+    // send the data to their respective processors
+    CALI_MARK_BEGIN("comm_large");
+    if(debug){
+        printf("Proc %i starting send\n",rank);
+    }
+    for(int i = 0; i < num_procs; i++){
+        if(send_size[i] == 0){
+            continue;
+        }
+        MPI_Send(splits[i].data(),send_size[i],MPI_INT,i,0,MPI_COMM_WORLD);
+    }
+
     // receive the data from the other processors
+    if(debug){
+        printf("Proc %i starting receive\n",rank);
+    }
+
     for(int i = 0; i < num_procs; i++){
         if(rec_size[i] == 0){
             continue;
@@ -134,18 +141,34 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
         MPI_Status s;
         MPI_Recv(rec + rec_ind[i],rec_size[i],MPI_INT,i,0,MPI_COMM_WORLD,&s);
     }
-    CALI_MARK_END("COMM - Rec");
+    CALI_MARK_END("comm_large");
+    CALI_MARK_END("comm");
 
-    LocalRadixSort(rec,rec_count);
+    if(debug){
+        printf("Proc %i finished communication\n",rank);
+    }
+
+    arr = rec;
+
+    if(debug){
+        printf("Proc %i starting local radix sort\n",rank);
+    }
+
+    CALI_MARK_BEGIN("comp");
+    LocalRadixSort(arr,rec_count);
+    CALI_MARK_END("comp");
+
+    if(debug){
+        printf("Proc %i finished local radix sort\n",rank);
+        printf("Proc %i is %slocally sorted\n",local_sorted(arr,rec_count)?"":"NOT ");
+    }
 };
 
 
 int main(int argc, char* argv[]) {
-    bool debug = true;
     cali::ConfigManager mgr;
     mgr.start();
 
-    CALI_MARK_BEGIN("main");
 
     int rank, num_procs;
     MPI_Init(&argc, &argv);
@@ -179,32 +202,36 @@ int main(int argc, char* argv[]) {
     if(debug){
         printf("Starting Data Generation on Proc %i\n",rank);
     }
+
     CALI_MARK_BEGIN("data_init_runtime");
     int* local_arr = new int[local_size];
     generate_data(local_arr, local_size, input_type, rank, num_procs);
     CALI_MARK_END("data_init_runtime");
 
+    printf("Proc %i stopping at pre-sort barrier\n",rank);
+    MPI_Barrier(MPI_COMM_WORLD);
+
     if(debug){
         printf("Starting Radix Sort on Proc %i\n", rank);
     }
 
-    CALI_MARK_BEGIN("MPI Radix Sort");
     MPI_RadixSort(local_arr, local_size, total_size, rank, num_procs);
-    CALI_MARK_END("MPI Radix Sort");
+
+    printf("Proc %i stopping at post-sort barrier\n",rank);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     if(debug){
         printf("Starting Global Sort Check on Proc %i\n", rank);
     }
 
-    CALI_MARK_BEGIN("Check Global Sort");
-    globally_sorted(local_arr, local_size, rank, num_procs);
-    CALI_MARK_BEGIN("Check Global Sort");
+    CALI_MARK_BEGIN("correctness_check");
+    bool sort = globally_sorted(local_arr, local_size, rank, num_procs);
+    CALI_MARK_END("correctness_check");
 
     if(debug){
-        printf("Finished on Proc %i\n", rank);
+        printf("Finished on Proc %i With sorted status %s\n", rank, sort? "true":"false");
     }
 
-    CALI_MARK_END("main");
     MPI_Finalize();
 
     adiak::init(NULL);
