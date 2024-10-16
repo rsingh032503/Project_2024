@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <cmath>
+#include <adiak.hpp>
 #include <caliper/cali.h>
 
 void generate_data(int* data, int size) {
@@ -22,6 +23,23 @@ bool is_sorted(int* data, int size) {
 }
 
 int main(int argc, char** argv) {
+    int power = atoi(argv[1]);
+    int array_size = 1 << power;  // 2^power
+    adiak::init(NULL);
+    adiak::launchdate();    // launch date of the job
+    adiak::libraries();     // Libraries used
+    adiak::cmdline();       // Command line used to launch the job
+    adiak::clustername();   // Name of the cluster
+    adiak::value("algorithm", "Sample"); // The name of the algorithm you are using (e.g., "merge", "bitonic")
+    adiak::value("programming_model", "MPI"); // e.g. "mpi"
+    adiak::value("data_type", "I"); // The datatype of input elements (e.g., double, int, float)
+    adiak::value("size_of_data_type", sizeof(int)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
+    adiak::value("input_size", array_size); // The number of elements in input dataset (1000)
+    adiak::value("input_type", "Random"); // For sorting, this would be choices: ("Sorted", "ReverseSorted", "Random", "1_perc_perturbed")
+    adiak::value("num_procs", argv[0]); // The number of processors (MPI ranks)
+    adiak::value("scalability", "strong"); // The scalability of your algorithm. choices: ("strong", "weak")
+    adiak::value("group_num", 9); // The number of your group (integer, e.g., 1, 10)
+    adiak::value("implementation_source", "online"); // Where you got the source code of your algorithm. choices: ("online", "ai", "handwritten").
     CALI_MARK_BEGIN("main");
     
     if (argc != 2) {
@@ -29,8 +47,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    int power = atoi(argv[1]);
-    int array_size = 1 << power;  // 2^power
+
     
     int rank, size;
     MPI_Init(&argc, &argv);
@@ -221,9 +238,14 @@ int main(int argc, char** argv) {
         delete[] global_data;
     }
     
+
+    
     delete[] local_data;
     MPI_Comm_free(&comm_dup);
     MPI_Finalize();
     CALI_MARK_END("main");
+    
+
     return 0;
+
 }
