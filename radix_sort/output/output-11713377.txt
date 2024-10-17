@@ -1,0 +1,89 @@
+
+Inactive Modules:
+  1) UCX/1.9.0     2) numactl/2.0.13
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) binutils/2.35     2) zlib/1.2.11
+
+The following have been reloaded with a version change:
+  1) GCCcore/10.2.0 => GCCcore/8.3.0
+
+Starting Data Generation on Proc 1
+Starting Data Generation on Proc 3
+Starting Data Generation on Proc 2
+Starting Radix Sort with 4 Processors with input size 2^16 and input type sorted
+Total input size: 65536
+Input/Processor: 16384
+Starting Data Generation on Proc 0
+Proc 0 stopping at pre-sort barrier
+Proc 1 stopping at pre-sort barrier
+Proc 2 stopping at pre-sort barrier
+Proc 3 stopping at pre-sort barrier
+Starting Radix Sort on Proc 0
+Proc 0 starting bit computations
+Proc 0 starting bitwise split
+Starting Radix Sort on Proc 1
+Proc 1 starting bit computations
+Proc 1 starting bitwise split
+Starting Radix Sort on Proc 3
+Proc 3 starting bit computations
+Proc 3 starting bitwise split
+Starting Radix Sort on Proc 2
+Proc 2 starting bit computations
+Proc 2 starting bitwise split
+Processor 0 send array : [16384, 0, 0, 0]
+Processor 3 send array : [0, 0, 0, 16384]
+Proc 3 starting scatter
+Proc 0 starting scatter
+Processor 1 send array : [0, 16384, 0, 0]
+Proc 1 starting scatter
+Processor 2 send array : [0, 0, 16384, 0]
+Proc 2 starting scatter
+Post scatter - Processor 0 send array : [16384, 0, 0, 0]
+Proc 0 starting send
+Post scatter - Processor 1 send array : [0, 16384, 0, 0]
+Proc 1 starting send
+Post scatter - Processor 2 send array : [0, 0, 16384, 0]
+Proc 2 starting send
+Post scatter - Processor 3 send array : [0, 0, 0, 16384]
+Proc 3 starting send
+Proc 0 starting receive
+Processor 0 recieved 16384 pieces of data from processor 0
+Proc 2 starting receive
+Processor 2 recieved 16384 pieces of data from processor 2
+Proc 1 starting receive
+Processor 1 recieved 16384 pieces of data from processor 1
+Proc 2 finished communication
+Checking arr = rec: 22481728 == 22481728
+Proc 2 starting local radix sort
+Proc 3 starting receive
+Processor 3 recieved 16384 pieces of data from processor 3
+Proc 3 finished communication
+Checking arr = rec: 33792784 == 33792784
+Proc 3 starting local radix sort
+Proc 0 finished communication
+Checking arr = rec: 15220800 == 15220800
+Proc 0 starting local radix sort
+Proc 1 finished communication
+Checking arr = rec: 27970368 == 27970368
+Proc 1 starting local radix sort
+Proc 0 finished local radix sort
+Proc 0 is locally sorted
+Proc 0 stopping at post-sort barrier
+Starting Global Sort Check on Proc 0
+Proc 1 finished local radix sort
+Proc 1 is locally sorted
+Proc 1 stopping at post-sort barrier
+Starting Global Sort Check on Proc 1
+Proc 2 finished local radix sort
+Proc 2 is locally sorted
+Proc 2 stopping at post-sort barrier
+Starting Global Sort Check on Proc 2
+Proc 3 finished local radix sort
+Proc 3 is locally sorted
+Proc 3 stopping at post-sort barrier
+Starting Global Sort Check on Proc 3
+Finished on Proc 0 With sorted status false
+Finished on Proc 1 With sorted status false
+Finished on Proc 2 With sorted status false
+Finished on Proc 3 With sorted status false

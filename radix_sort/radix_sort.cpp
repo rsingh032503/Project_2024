@@ -60,6 +60,8 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     if(debug){
         printf("Proc %i starting bit computations\n",rank);
     }
+    CALI_MARK_BEGIN("comp");
+    CALI_MARK_BEGIN("comp_small");
     //find what bit the maximum number is at
     int most_sig_bit = 1;
     while(global_size >> most_sig_bit > 1){
@@ -85,6 +87,9 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     }
 
     delete[] arr;
+    CALI_MARK_END("comp_small");
+    CALI_MARK_END("comp");
+    
 
     
     //determine how much data is being sent to each processor
@@ -171,7 +176,9 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     }
 
     CALI_MARK_BEGIN("comp");
+    CALI_MARK_BEGIN("comp_large");
     LocalRadixSort(arr,rec_count);
+    CALI_MARK_END("comp_large");
     CALI_MARK_END("comp");
 
     if(debug){
@@ -219,7 +226,7 @@ int main(int argc, char* argv[]) {
     if(debug){
         printf("Starting Data Generation on Proc %i\n",rank);
     }
-
+    CALI_MARK_BEGIN("main");
     CALI_MARK_BEGIN("data_init_runtime");
     int* local_arr = new int[local_size];
     generate_data(local_arr, local_size, input_type, rank, num_procs);
@@ -244,6 +251,7 @@ int main(int argc, char* argv[]) {
     CALI_MARK_BEGIN("correctness_check");
     bool sort = globally_sorted(local_arr, local_size, rank, num_procs);
     CALI_MARK_END("correctness_check");
+    CALI_MARK_END("main");
 
     if(debug){
         printf("Finished on Proc %i With sorted status %s\n", rank, sort? "true":"false");
