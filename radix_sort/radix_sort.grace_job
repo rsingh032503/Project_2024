@@ -9,7 +9,7 @@
 #SBATCH --nodes=1               #Request nodes
 #SBATCH --ntasks-per-node=16    # Request tasks/cores per node
 #SBATCH --mem=8G                 #Request GB per node 
-#SBATCH --output=output/output.%j       #Send stdout/err to "output.[jobID]" 
+#SBATCH --output=output/output-%j.txt       #Send stdout/err to "output.[jobID]" 
 #
 ##OPTIONAL JOB SPECIFICATIONS
 ##SBATCH --mail-type=ALL              #Send email on all job events
