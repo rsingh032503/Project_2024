@@ -319,6 +319,31 @@ CALI_MARK_END("comp");
 └─ 0.440 correctness_check
 ```
 
+### **Radix Sort Calltree**: (2^16 elements, 4 processors, sorted input)
+
+```
+0.003 main
+├─ 0.000 data_init_runtime
+├─ 0.001 MPI_Barrier
+├─ 0.001 comp
+│  ├─ 0.000 comp_small
+│  └─ 0.001 comp_large
+├─ 0.000 comm
+│  ├─ 0.000 comm_small
+│  │  └─ 0.000 MPI_Scatter
+│  └─ 0.000 comm_large
+│     ├─ 0.000 MPI_Send
+│     └─ 0.000 MPI_Recv
+└─ 0.000 correctness_check
+   ├─ 0.000 MPI_Allreduce
+   ├─ 0.000 MPI_Send
+   └─ 0.000 MPI_Recv
+0.000 MPI_Finalize
+0.000 MPI_Initialized
+0.000 MPI_Finalized
+0.001 MPI_Comm_dup
+```
+
 ### 3b. Collect Metadata
 
 Have the following code in your programs to collect metadata:
@@ -343,6 +368,27 @@ adiak::value("implementation_source", implementation_source); // Where you got t
 They will show up in the `Thicket.metadata` if the caliper file is read into Thicket.
 
 ### **See the `Builds/` directory to find the correct Caliper configurations to get the performance metrics.** They will show up in the `Thicket.dataframe` when the Caliper file is read into Thicket.
+
+### **Radix Sort Metadata**
+
+```
+adiak::init(NULL);
+adiak::launchdate(); 
+adiak::libraries();  
+adiak::cmdline();       
+adiak::clustername();   
+adiak::value("algorithm", "Radix"); 
+adiak::value("programming_model", "MPI"); 
+adiak::value("data_type", "I");
+adiak::value("size_of_data_type", sizeof(int)); 
+adiak::value("input_size", total_size);
+adiak::value("input_type", input_type);
+adiak::value("num_procs", num_procs);
+adiak::value("scalability", "strong");
+adiak::value("group_num", 9);
+adiak::value("implementation_source", "online");
+```
+
 ## 4. Performance evaluation
 
 Include detailed analysis of computation performance, communication performance. 
