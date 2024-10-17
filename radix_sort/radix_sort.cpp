@@ -1,4 +1,5 @@
 #include <mpi.h>
+#include <string>
 #include <vector>
 #include <cstdio>
 #include <cstdlib>
@@ -12,6 +13,9 @@
 
 #include "../generate_data.h"
 #include "../check_sorted.h"
+
+using std::string;
+using std::__cxx11::to_string;
 
 bool debug = true;
 
@@ -86,9 +90,12 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     //determine how much data is being sent to each processor
     
     int send_size[num_procs]{0};
+    string print = "Processor " + to_string(rank) + " send array : [";
     for(int i = 0; i < num_procs; i++){
-        send_size[i] = splits[i].size();
+        send_size[i] = splits[i].size(); 
+        print = print + to_string(send_size[i]) + (i != num_procs-1?", ":"]\n");
     }
+    printf("%s",print.c_str());
 
     CALI_MARK_BEGIN("comm");
     
@@ -101,9 +108,15 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     }
     CALI_MARK_BEGIN("comm_small");
     for(int i = 0; i < num_procs; i++){
-        MPI_Scatter(&send_size,1,MPI_INT,(&rec_size) + i,num_procs,MPI_INT,i,MPI_COMM_WORLD);
+        MPI_Scatter(&send_size,1,MPI_INT,&(rec_size[i]),1,MPI_INT,i,MPI_COMM_WORLD);
     }
     CALI_MARK_END("comm_small");
+
+    string print2 = "Post scatter - Processor " + to_string(rank) + " send array : [";
+    for(int i = 0; i < num_procs; i++){
+        print2 = print2 + to_string(send_size[i]) + (i != num_procs-1?", ":"]\n");
+    }
+    printf("%s",print2.c_str());
 
 
     for(int i = 0; i < num_procs; i++){
@@ -123,6 +136,7 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
         printf("Proc %i starting send\n",rank);
     }
     for(int i = 0; i < num_procs; i++){
+        //printf("Processor %i is sending %i pieces of data to processor %i\n", rank, send_size[i], i);
         if(send_size[i] == 0){
             continue;
         }
@@ -138,6 +152,7 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
         if(rec_size[i] == 0){
             continue;
         }
+        printf("Processor %i recieved %i pieces of data from processor %i\n",rank,rec_size[i],i);
         MPI_Status s;
         MPI_Recv(rec + rec_ind[i],rec_size[i],MPI_INT,i,0,MPI_COMM_WORLD,&s);
     }
@@ -151,6 +166,7 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     arr = rec;
 
     if(debug){
+        printf("Checking arr = rec: %u == %u\n",arr,rec);
         printf("Proc %i starting local radix sort\n",rank);
     }
 
@@ -159,8 +175,9 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     CALI_MARK_END("comp");
 
     if(debug){
+        bool loc_sorted = local_sorted(arr,rec_count);
         printf("Proc %i finished local radix sort\n",rank);
-        printf("Proc %i is %slocally sorted\n",local_sorted(arr,rec_count)?"":"NOT ");
+        printf("Proc %i is%slocally sorted\n",rank,loc_sorted?" ":" NOT ");
     }
 };
 
@@ -231,6 +248,7 @@ int main(int argc, char* argv[]) {
     if(debug){
         printf("Finished on Proc %i With sorted status %s\n", rank, sort? "true":"false");
     }
+    delete local_arr;
 
     MPI_Finalize();
 
