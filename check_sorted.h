@@ -6,6 +6,8 @@
 #define RETURN_SORTED_TAG 3
 
 bool local_sorted(const int* arr, int size){
+    printf("Processor entered local_sorted");
+
     for(int i = 1; i < size; i++){
         if(arr[i-1] > arr[i]){
             return false;
@@ -15,7 +17,10 @@ bool local_sorted(const int* arr, int size){
 };
 
 bool globally_sorted(const int* arr, int size, int rank, int num_procs, bool debug = false){
-
+    printf("Processor %i entered globally_sorted() with debug status %s",rank,(debug)? "true":"false");
+    if (debug){
+        printf("Processor %i entered the global sort function");
+    }
     //check if locally sorted
     bool locally_sorted = local_sorted(arr,size);
 
@@ -50,7 +55,7 @@ bool globally_sorted(const int* arr, int size, int rank, int num_procs, bool deb
 
         bool sorted = prev_proc_last_val <= arr[0];
         if(debug){
-            printf("Processor %i is%ssorted in relation to processor %i",rank,(sorted)?" ":" NOT " ,rank-1)
+            printf("Processor %i is%ssorted in relation to processor %i",rank,(sorted)?" ":" NOT " ,rank-1);
         }
 
         // send sorted check from last value to firt value in local array
@@ -64,8 +69,8 @@ bool globally_sorted(const int* arr, int size, int rank, int num_procs, bool deb
         MPI_Status s;
         MPI_Recv(&globally_sorted, 1, MPI_CXX_BOOL, rank+1, RETURN_SORTED_TAG, MPI_COMM_WORLD, &s);
     }
-    if(debgug){
-        printf("Processor %i is%sglobally sorted",rank,(globally_sorted)?" ":" NOT ")
+    if(debug){
+        printf("Processor %i is%sglobally sorted",rank,(globally_sorted)?" ":" NOT ");
     }
 
     bool all_globally_sorted = false;

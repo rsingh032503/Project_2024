@@ -79,6 +79,11 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
 
     if(debug){
         printf("Proc %i starting bitwise split\n",rank);
+        printf("Processor %i data array starts at %p\n",rank ,arr);
+        printf("\tand ends at %p\n",arr+size);
+        fflush(stdout);
+        MPI_Barrier(MPI_COMM_WORLD);
+        
     }
     //sort the data into respective buckets based on bits
     std::vector<std::vector<int>> splits(num_procs);
@@ -100,7 +105,9 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
         send_size[i] = splits[i].size(); 
         print = print + to_string(send_size[i]) + (i != num_procs-1?", ":"]\n");
     }
-    printf("%s",print.c_str());
+    if(debug){
+        printf("%s",print.c_str());
+    }
 
     CALI_MARK_BEGIN("comm");
     
@@ -121,7 +128,9 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     for(int i = 0; i < num_procs; i++){
         print2 = print2 + to_string(send_size[i]) + (i != num_procs-1?", ":"]\n");
     }
-    printf("%s",print2.c_str());
+    if(debug){
+        printf("%s",print2.c_str());
+    }
 
 
     for(int i = 0; i < num_procs; i++){
@@ -157,7 +166,9 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
         if(rec_size[i] == 0){
             continue;
         }
-        printf("Processor %i recieved %i pieces of data from processor %i\n",rank,rec_size[i],i);
+        if(debug){
+            printf("Processor %i recieved %i pieces of data from processor %i\n",rank,rec_size[i],i);
+        }
         MPI_Status s;
         MPI_Recv(rec + rec_ind[i],rec_size[i],MPI_INT,i,0,MPI_COMM_WORLD,&s);
     }
@@ -226,13 +237,17 @@ int main(int argc, char* argv[]) {
     if(debug){
         printf("Starting Data Generation on Proc %i\n",rank);
     }
+
     CALI_MARK_BEGIN("main");
     CALI_MARK_BEGIN("data_init_runtime");
-    int* local_arr = new int[local_size];
+    int* local_arr = new int[local_size]();
     generate_data(local_arr, local_size, input_type, rank, num_procs);
     CALI_MARK_END("data_init_runtime");
 
-    printf("Proc %i stopping at pre-sort barrier\n",rank);
+    if(debug){
+        printf("Proc %i stopping at pre-sort barrier\n",rank);
+    }
+
     MPI_Barrier(MPI_COMM_WORLD);
 
     if(debug){
@@ -240,8 +255,9 @@ int main(int argc, char* argv[]) {
     }
 
     MPI_RadixSort(local_arr, local_size, total_size, rank, num_procs);
-
-    printf("Proc %i stopping at post-sort barrier\n",rank);
+    if(debug){
+        printf("Proc %i stopping at post-sort barrier\n",rank);
+    }
     MPI_Barrier(MPI_COMM_WORLD);
 
     if(debug){
@@ -249,7 +265,7 @@ int main(int argc, char* argv[]) {
     }
 
     CALI_MARK_BEGIN("correctness_check");
-    bool sort = globally_sorted(local_arr, local_size, rank, num_procs);
+    bool sort = globally_sorted(local_arr, local_size, rank, num_procs, true);
     CALI_MARK_END("correctness_check");
     CALI_MARK_END("main");
 
@@ -275,6 +291,4 @@ int main(int argc, char* argv[]) {
     adiak::value("scalability", "strong"); // The scalability of your algorithm. choices: ("strong", "weak")
     adiak::value("group_num", 9); // The number of your group (integer, e.g., 1, 10)
     adiak::value("implementation_source", "online"); // Where you got the source code of your algorithm. choices: ("online", "ai", "handwritten").
-
-    
 }
