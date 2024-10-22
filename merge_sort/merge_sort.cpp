@@ -7,6 +7,43 @@
 #include <adiak.hpp>
 #include <cstdlib>
 
+std::vector<int> generateRandomData(int size) {
+    std::vector<int> data(size);
+    for (int i = 0; i < size; i++) {
+        data[i] = rand() % size;
+    }
+    return data;
+}
+
+std::vector<int> generateSortedData(int size) {
+    std::vector<int> data(size);
+    for (int i = 0; i < size; i++) {
+        data[i] = i;
+    }
+    return data;
+}
+
+std::vector<int> generateReverseSortedData(int size) {
+    std::vector<int> data(size);
+    for (int i = 0; i < size; i++) {
+        data[i] = size - i;
+    }
+    return data;
+}
+
+std::vector<int> generateOnePercentPertubedData(int size) {
+    std::vector<int> data(size);
+    for (int i = 0; i < size; i++) {
+        data[i] = i;
+    }
+    for (int i = 0; i < size / 100; i++) {
+        int index1 = rand() % size;
+        int index2 = rand() % size;
+        std::swap(data[index1], data[index2]);
+    }
+    return data;
+}
+
 std::vector<int> merge(std::vector<int>& left, std::vector<int>& right){
     std::vector<int> result;
     int i = 0;
@@ -71,40 +108,53 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+    // Validate inputs
+
+    if (argc != 3) {
+        if (rank == 0) {
+            std::cerr << "Usage: " << argv[0] << " <array_size_power> <input_type>" << std::endl;
+            std::cerr << "Example: " << argv[0] << " 16 random" << std::endl;
+            std::cerr << "Input types: random, sorted, reverse_sorted, one_percent_pertubed" << std::endl;
+        }
+        MPI_Finalize();
+        return 1;
+    }
+
     MPI_Comm comm;
     MPI_Comm_dup(MPI_COMM_WORLD, &comm);
 
     const int ARRAY_SIZE = 1 << atoi(argv[1]);
+    std::string input_type = argv[2];
     std::vector<int> globalArray;
 
     // METADATA
 
-    std::string algorithm = "mergesort";
-    std::string programming_model = "mpi";
-    std::string data_type = "int";
-    int size_of_data_type = sizeof(int);
-    int input_size = ARRAY_SIZE;
-    std::string input_type = "Random";
-    int num_procs = size;
-    std::string scalability = "strong";
-    int group_number = 9;
-    std::string implementation_source = "online";
+    // std::string algorithm = "mergesort";
+    // std::string programming_model = "mpi";
+    // std::string data_type = "int";
+    // int size_of_data_type = sizeof(int);
+    // int input_size = ARRAY_SIZE;
+    // std::string input_type = "Random";
+    // int num_procs = size;
+    // std::string scalability = "strong";
+    // int group_number = 9;
+    // std::string implementation_source = "online";
 
     adiak::init(NULL);
     adiak::launchdate();
     adiak::libraries();
     adiak::cmdline();
     adiak::clustername();
-    adiak::value("algorithm", algorithm);
-    adiak::value("programming_model", programming_model);
-    adiak::value("data_type", data_type);
-    adiak::value("size_of_data_type", size_of_data_type);
-    adiak::value("input_size", input_size);
+    adiak::value("algorithm", "mergesort");
+    adiak::value("programming_model", "mpi");
+    adiak::value("data_type", "int");
+    adiak::value("size_of_data_type", sizeof(int));
+    adiak::value("input_size", ARRAY_SIZE);
     adiak::value("input_type", input_type);
-    adiak::value("num_procs", num_procs);
-    adiak::value("scalability", scalability);
-    adiak::value("group_num", group_number);
-    adiak::value("implementation_source", implementation_source);
+    adiak::value("num_procs", size);
+    adiak::value("scalability", "strong");
+    adiak::value("group_num", 9);
+    adiak::value("implementation_source", "online");
 
     // END METADATA
 
@@ -112,9 +162,25 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         CALI_MARK_BEGIN("data_init_runtime");
         globalArray.resize(ARRAY_SIZE);
-        for (int i = 0; i < ARRAY_SIZE; i++) {
-            globalArray[i] = rand() % ARRAY_SIZE;
+
+        // for (int i = 0; i < ARRAY_SIZE; i++) {
+        //     globalArray[i] = rand() % ARRAY_SIZE;
+        // }
+        
+        if (input_type == "random") {
+            globalArray = generateRandomData(ARRAY_SIZE);
+        } else if (input_type == "sorted") {
+            globalArray = generateSortedData(ARRAY_SIZE);
+        } else if (input_type == "reverse_sorted") {
+            globalArray = generateReverseSortedData(ARRAY_SIZE);
+        } else if (input_type == "one_percent_pertubed") {
+            globalArray = generateOnePercentPertubedData(ARRAY_SIZE);
         }
+        else {
+            std::cerr << "Invalid input type" << std::endl;
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+
         CALI_MARK_END("data_init_runtime");
     }
 
