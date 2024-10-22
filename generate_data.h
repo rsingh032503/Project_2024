@@ -8,7 +8,7 @@
 void generate_data(int* arr, int size, const char* type, int mpi_rank, int mpi_size) {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, mpi_size*size);
+    std::uniform_int_distribution<> dis(0, mpi_size*size-1);
 
     if (strcmp(type, "sorted") == 0) {
         for (int i = 0; i < size; i++) {
