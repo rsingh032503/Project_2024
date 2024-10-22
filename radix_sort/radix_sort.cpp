@@ -55,7 +55,7 @@ void LocalRadixSort(int*& arr, int size){
     }
 };
 
-void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs){
+void MPI_RadixSort(int*& arr, int& size, int global_size, int rank, int num_procs){
 
     if(debug){
         printf("Proc %i starting bit computations\n",rank);
@@ -75,6 +75,11 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     }
 
     int shift = most_sig_bit - num_sig_bits;
+    if(debug){
+        printf("Proc %i: most significant bit: %i\n",rank ,most_sig_bit);
+        printf("Proc %i: num significant bit: %i\n",rank ,num_sig_bits);
+        printf("Proc %i: shift: %i\n", rank, shift);
+    }
 
 
     if(debug){
@@ -83,12 +88,13 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
         printf("\tand ends at %p\n",arr+size);
         fflush(stdout);
         MPI_Barrier(MPI_COMM_WORLD);
-        
+
     }
     //sort the data into respective buckets based on bits
     std::vector<std::vector<int>> splits(num_procs);
     for(int i = 0; i < size; i++){
-        splits[arr[i] >> shift].push_back(arr[i]);
+        splits.at(arr[i] >> shift).push_back(arr[i]);
+
     }
 
     delete[] arr;
@@ -136,7 +142,7 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     for(int i = 0; i < num_procs; i++){
         rec_count += rec_size[i];
     }
-
+    
     int* rec = new int[rec_count];
     int rec_ind[num_procs]{0};
 
@@ -178,7 +184,8 @@ void MPI_RadixSort(int*& arr, int size, int global_size, int rank, int num_procs
     if(debug){
         printf("Proc %i finished communication\n",rank);
     }
-
+    
+    size = rec_count;
     arr = rec;
 
     if(debug){

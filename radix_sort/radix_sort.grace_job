@@ -29,4 +29,4 @@ module load PAPI/6.0.0
 
 CALI_CONFIG="spot(output=caliper_files/p${processes}-a${array_size}-${input_type}.cali, \
     time.variance,profile.mpi)" \
-mpirun -np $processes ./radixsort $array_size $input_type
+mpirun -np $processes ./radix_sort $array_size $input_type
