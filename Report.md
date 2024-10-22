@@ -14,9 +14,17 @@ We will be using iMessage as our primary method of communication. We will share 
 ### 2a. Brief project description (what algorithms will you be comparing and on what architectures)
 
 - Bitonic Sort:
-- Quick Sort:
+A bitonic sort implementation parallelizes the butterfly-pattern comparisons of bitonic sequences across processors, where each stage doubles the size of sorted subsequences by having processors exchange data with partners at varying "distances" (rank offsets), performing compare-and-swap operations locally, until the entire sequence is sorted in ascending or descending order across all processors.
+
+- Sample Sort:
+The algorithm begins by distributing data evenly across processes. Each process then sorts its local data and selects regular samples, which are gathered and used to choose splitters that partition the data range. The splitters are used to redistribute the data using all-to-all communication so each process receives elements in its designated range, followed by a final local sort on each process.
+
 - Merge Sort:
+This algorithm is a parallelized implementation of merge sort. The global array is divided into a number of segments that match the number of processes. Then, merge sort is run on each of the processes independently. It recursively divides the subarrays until there is one element in each subarray. Then, it procedurally merges and sorts each subarray until every element has been sorted. After each segment is sorted, a final merge is performed to create the fully sorted array.
+
 - Radix Sort:
+This implementation performs parallel radix sort by first distributing data across processors based on the most significant bits (determined by the number of processors). Each processor then performs a local radix sort using counting sort on 8-bit chunks, with the final result remaining distributed across the processors in sorted order.
+  
 
 ### 2b. Pseudocode for each parallel algorithm
 - For MPI programs, include MPI calls you will use to coordinate between processes
@@ -319,6 +327,31 @@ CALI_MARK_END("comp");
 └─ 0.440 correctness_check
 ```
 
+### **Radix Sort Calltree**: (2^16 elements, 4 processors, sorted input)
+
+```
+0.003 main
+├─ 0.000 data_init_runtime
+├─ 0.001 MPI_Barrier
+├─ 0.001 comp
+│  ├─ 0.000 comp_small
+│  └─ 0.001 comp_large
+├─ 0.000 comm
+│  ├─ 0.000 comm_small
+│  │  └─ 0.000 MPI_Scatter
+│  └─ 0.000 comm_large
+│     ├─ 0.000 MPI_Send
+│     └─ 0.000 MPI_Recv
+└─ 0.000 correctness_check
+   ├─ 0.000 MPI_Allreduce
+   ├─ 0.000 MPI_Send
+   └─ 0.000 MPI_Recv
+0.000 MPI_Finalize
+0.000 MPI_Initialized
+0.000 MPI_Finalized
+0.001 MPI_Comm_dup
+```
+
 ### 3b. Collect Metadata
 
 Have the following code in your programs to collect metadata:
@@ -343,6 +376,27 @@ adiak::value("implementation_source", implementation_source); // Where you got t
 They will show up in the `Thicket.metadata` if the caliper file is read into Thicket.
 
 ### **See the `Builds/` directory to find the correct Caliper configurations to get the performance metrics.** They will show up in the `Thicket.dataframe` when the Caliper file is read into Thicket.
+
+### **Radix Sort Metadata**
+
+```
+adiak::init(NULL);
+adiak::launchdate(); 
+adiak::libraries();  
+adiak::cmdline();       
+adiak::clustername();   
+adiak::value("algorithm", "Radix"); 
+adiak::value("programming_model", "MPI"); 
+adiak::value("data_type", "I");
+adiak::value("size_of_data_type", sizeof(int)); 
+adiak::value("input_size", total_size);
+adiak::value("input_type", input_type);
+adiak::value("num_procs", num_procs);
+adiak::value("scalability", "strong");
+adiak::value("group_num", 9);
+adiak::value("implementation_source", "online");
+```
+
 ## 4. Performance evaluation
 
 Include detailed analysis of computation performance, communication performance. 

@@ -38,45 +38,76 @@ void generate_data(int* arr, int size, const char* type, int mpi_rank, int mpi_s
     }
 };
 
-void bitonic_sort(int* arr, int size, int num_procs, int rank) {
-    CALI_CXX_MARK_FUNCTION;
-
-    for (int step = 2; step <= num_procs; step *= 2) {
-        for (int substep = step / 2; substep > 0; substep /= 2) {
-            int partner = rank ^ substep;
-            int* recv_buf = new int[size];
-
-            CALI_MARK_BEGIN("comm");
-            CALI_MARK_BEGIN("comm_large");
-            MPI_Sendrecv(arr, size, MPI_INT, partner, 0,
-                         recv_buf, size, MPI_INT, partner, 0,
-                         MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            CALI_MARK_END("comm_large");
-            CALI_MARK_END("comm");
-
-            CALI_MARK_BEGIN("comp");
-            CALI_MARK_BEGIN("comp_large");
-            bool ascending = (rank & step) == 0;
-            if (ascending) {
-                for (int i = 0; i < size; i++) {
-                    if (arr[i] > recv_buf[i]) {
-                        std::swap(arr[i], recv_buf[i]);
-                    }
-                }
-            } else {
-                for (int i = 0; i < size; i++) {
-                    if (arr[i] < recv_buf[i]) {
-                        std::swap(arr[i], recv_buf[i]);
-                    }
-                }
+void bitonic_merge(int* arr, int size, int dir) {
+    for (int step = size / 2; step > 0; step /= 2) {
+        for (int i = 0; i < size; i++) {
+            int partner = i ^ step;
+            if (partner > i && ((arr[i] > arr[partner]) == dir)) {
+                std::swap(arr[i], arr[partner]);
             }
-            CALI_MARK_END("comp_large");
-            CALI_MARK_END("comp");
-
-            delete[] recv_buf;
         }
     }
 }
+
+void bitonic_sort_local(int* arr, int size, int dir) {
+    if (size <= 1) return;
+
+    // Sort the first half in ascending order and the second half in descending order
+    int mid = size / 2;
+    bitonic_sort_local(arr, mid, 1);    // Ascending
+    bitonic_sort_local(arr + mid, size - mid, 0);  // Descending
+
+    // Merge the whole array in the given direction
+    bitonic_merge(arr, size, dir);
+}
+
+void bitonic_merge_global(int* local_arr, int size, int partner, int dir, MPI_Comm comm) {
+    int* recv_arr = new int[size];
+
+    // Exchange data with the partner process
+    MPI_Sendrecv(local_arr, size, MPI_INT, partner, 0,
+                 recv_arr, size, MPI_INT, partner, 0,
+                 comm, MPI_STATUS_IGNORE);
+
+    // Create a temporary array to hold the merged data
+    int* temp = new int[size * 2];
+
+    // Merge the local and received arrays into temp
+    std::merge(local_arr, local_arr + size, recv_arr, recv_arr + size, temp);
+
+    // If ascending (dir == 1), keep the first half (smaller elements),
+    // if descending (dir == 0), keep the second half (larger elements)
+    if (dir == 1) {
+        // Ascending: Keep the first half of the merged array
+        std::copy(temp, temp + size, local_arr);
+    } else {
+        // Descending: Keep the second half of the merged array
+        std::copy(temp + size, temp + 2 * size, local_arr);
+    }
+
+    // Clean up
+    delete[] recv_arr;
+    delete[] temp;
+}
+
+void bitonic_sort(int* arr, int size, int num_procs, int rank) {
+    CALI_CXX_MARK_FUNCTION;
+
+    // Step 1: Perform local bitonic sort on each process
+    bitonic_sort_local(arr, size, 1);  // Local sort in ascending order
+
+    // Step 2: Global sorting using MPI
+    for (int phase = 1; phase < num_procs; phase <<= 1) {
+        for (int step = phase; step > 0; step >>= 1) {
+            int partner = rank ^ step;
+            int dir = ((rank & phase) == 0) ? 1 : 0;  // Ascending if rank is lower, descending if higher
+
+            // Perform the bitonic merge with the partner process
+            bitonic_merge_global(arr, size, partner, dir, MPI_COMM_WORLD);
+        }
+    }
+}
+
 
 bool check_sorted(int* arr, int size) {
     for (int i = 1; i < size; i++) {
