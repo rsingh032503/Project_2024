@@ -1,4 +1,4 @@
-#include <mpi.h>
+ #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
@@ -7,11 +7,35 @@
 #include <adiak.hpp>
 #include <caliper/cali.h>
 
-void generate_data(int* data, int size) {
-    for (int i = 0; i < size; i++) {
-        data[i] = rand() % size;  // Random numbers between 0 and size-1
+
+void generate_data(int* data, int size,std::string input_type) {
+    if(input_type == "Random"){
+      for (int i = 0; i < size; i++) {
+          data[i] = rand() % size;  // Random numbers between 0 and size-1
+      }
+    }else if(input_type == "Reverse"){
+      for (int i = 0; i < size; i++) {
+          data[i] = size - i;
+      }
+    }else if(input_type == "Sorted"){
+      for (int i = 0; i < size; i++) {
+          data[i] = i;
+      }
+    }else if(input_type == "Perturbed"){
+      for (int i = 0; i < size; i++) {
+          data[i] = i;
+      }
+      for (int i = 0; i < size / 100; i++) {
+          int index1 = rand() % size;
+          int index2 = rand() % size;
+          std::swap(data[index1], data[index2]);
+      }
+    }else{
+      std::cerr << "Invalid input type" << std::endl;
+      MPI_Abort(MPI_COMM_WORLD, 1);
     }
 }
+
 
 bool is_sorted(int* data, int size) {
     for (int i = 1; i < size; i++) {
@@ -23,8 +47,13 @@ bool is_sorted(int* data, int size) {
 }
 
 int main(int argc, char** argv) {
+    int rank, size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
     int power = atoi(argv[1]);
     int array_size = 1 << power;  // 2^power
+    std::string input_type = argv[2];
     adiak::init(NULL);
     adiak::launchdate();    // launch date of the job
     adiak::libraries();     // Libraries used
@@ -35,24 +64,25 @@ int main(int argc, char** argv) {
     adiak::value("data_type", "I"); // The datatype of input elements (e.g., double, int, float)
     adiak::value("size_of_data_type", sizeof(int)); // sizeof(datatype) of input elements in bytes (e.g., 1, 2, 4)
     adiak::value("input_size", array_size); // The number of elements in input dataset (1000)
-    adiak::value("input_type", "Random"); // For sorting, this would be choices: ("Sorted", "ReverseSorted", "Random", "1_perc_perturbed")
+    adiak::value("input_type", input_type); // For sorting, this would be choices: ("Sorted", "ReverseSorted", "Random", "1_perc_perturbed")
     adiak::value("num_procs", argv[0]); // The number of processors (MPI ranks)
     adiak::value("scalability", "strong"); // The scalability of your algorithm. choices: ("strong", "weak")
     adiak::value("group_num", 9); // The number of your group (integer, e.g., 1, 10)
     adiak::value("implementation_source", "online"); // Where you got the source code of your algorithm. choices: ("online", "ai", "handwritten").
     CALI_MARK_BEGIN("main");
     
-    if (argc != 2) {
-        printf("Usage: %s <power_of_2> <num_processes>\n", argv[0]);
-        return 1;
+    if (argc != 3) {
+      if (rank == 0) {
+          printf("Usage: %s <num_processes> <array_size_power> <input_type>\n", argv[0]);
+          MPI_Finalize();
+          return 1;
+      }
     }
+    
 
 
     
-    int rank, size;
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    
 
     // Create duplicate communicator
     MPI_Comm comm_dup;
@@ -67,7 +97,7 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         CALI_MARK_BEGIN("data_init_runtime");
         global_data = new int[array_size];
-        generate_data(global_data, array_size);
+        generate_data(global_data, array_size,input_type);
         CALI_MARK_END("data_init_runtime");
     }
     
