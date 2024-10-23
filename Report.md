@@ -342,7 +342,7 @@ All functions will be called from `main` and most will be grouped under either `
 0.001 MPI_Comm_dup
 ```
 
-### **Merge Sort Calltree**: ($2^{22} elements, 8 processors, random input)
+### **Merge Sort Calltree**: ($2^{22}$ elements, 8 processors, random input)
 
 ```
 2.613 main
@@ -361,6 +361,26 @@ All functions will be called from `main` and most will be grouped under either `
 │  └─ 1.408 comp_large
 ├─ 0.028 correctness_check
 └─ 0.123 data_init_runtime
+```
+
+### **Bitonic Sort Calltree**: ($2^{22}$ elements, 8 processors, random input)
+
+```
+9.100 main
+├─ 0.000 MPI_Init
+├─ 6.717 MPI_Reduce
+├─ 0.107 comm
+│  └─ 0.107 comm_large
+│     ├─ 0.002 MPI_Gather
+│     └─ 0.105 MPI_Scatter
+├─ 0.843 comp
+│  └─ 0.843 comp_large
+├─ 0.031 correctness_check
+└─ 0.097 data_init_runtime
+0.027 MPI_Comm_dup
+0.000 MPI_Finalize
+0.000 MPI_Finalized
+0.000 MPI_Initialized
 ```
 
 ### 3b. Collect Metadata
