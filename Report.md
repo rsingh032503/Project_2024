@@ -523,6 +523,11 @@ perform runs that invoke algorithm2 for Sorted, ReverseSorted, and Random data).
     - Total time
     - Variance time/rank
 
+### Merge Sort Graphs and Explanations
+
+For this implementation, on the smaller array sizes, the parallel overhead caused the time to increase. However, as the array size and number of processors increased, the time to sort the array decreased. When processor amounts began to get into the hundreds the parallel overhead started to take over again, and made the program slower. This can be seen in the graphs where the processor values increase the comm times per rank also increase. As the processors increased, the comp values also decreased, supporting that each processor will have less to compute as more get added.
+
+I was unable to get the 512 and 1024 cali files due to issues with the Grace queue and hydra errors. However, all other cali files are finished.
 
 ## 5. Presentation
 Plots for the presentation should be as follows:
