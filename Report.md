@@ -531,7 +531,7 @@ I was unable to get the 512 and 1024 cali files due to issues with the Grace que
 
 ### Radix Sort Graphs and Explanations
 
-I have not been able to generate the graphs due to the added complexity of another variable (3d vs 2d in previous labs) however I did notice a decrease in time of the alhorithm as the processor count increased. While there was an increase when moving from 1 node to many due to the network cost overall the time to completion still decreased.
+I have not been able to generate the graphs due to the added complexity of another variable (3d vs 2d in previous labs) however I did notice a decrease in time of the alhorithm as the processor count increased. While there was an increase when moving from 1 node to many due to the network cost overall the time to completion still decreased. Overall the sorted and perturbed input types performed very simmilarly due to the data being roughly the same. The next slowest was random where roughly 1 / number of processors data stayed local to a processor where everything else got moved to another processor. Lastly the slowest was reverse sorted as every piece of data had to be transfered to another processor causing significant communication times.
 
 I was unable to generate the files for reversed sorted as the time to completion was significantly longer than the other three input types due to the excessive ammount of communication that has to occur at the splitting stage of the algorithm.
 
