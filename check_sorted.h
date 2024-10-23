@@ -8,8 +8,8 @@
 bool local_sorted(const int* arr, int size){
     for(int i = 1; i < size; i++){
         if(arr[i-1] > arr[i]){
-            printf("val at index %i: %i",i-1,arr[i-1]);
-            printf("val at index %i: %i",i,arr[i]);
+            //printf("val at index %i: %i",i-1,arr[i-1]);
+            //printf("val at index %i: %i",i,arr[i]);
             return false;
         }
     }

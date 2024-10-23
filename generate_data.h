@@ -9,6 +9,7 @@ void generate_data(int* arr, int size, const char* type, int mpi_rank, int mpi_s
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, mpi_size*size-1);
+    std::uniform_int_distribution<> idx_dis(0, size-1);
 
     if (strcmp(type, "sorted") == 0) {
         for (int i = 0; i < size; i++) {
@@ -28,7 +29,7 @@ void generate_data(int* arr, int size, const char* type, int mpi_rank, int mpi_s
         }
         int perturb_count = size / 100;
         for (int i = 0; i < perturb_count; i++) {
-            int idx = dis(gen);
+            int idx = idx_dis(gen);
             arr[idx] = dis(gen);
         }
     }

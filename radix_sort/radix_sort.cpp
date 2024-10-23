@@ -17,7 +17,7 @@
 using std::string;
 using std::__cxx11::to_string;
 
-bool debug = true;
+bool debug = false;
 
 // Function to perform counting sort for a specific digit
 void countingSort(int*& arr, int size, int exp){
@@ -184,7 +184,7 @@ void MPI_RadixSort(int*& arr, int& size, int global_size, int rank, int num_proc
     if(debug){
         printf("Proc %i finished communication\n",rank);
     }
-    
+
     size = rec_count;
     arr = rec;
 
@@ -272,7 +272,7 @@ int main(int argc, char* argv[]) {
     }
 
     CALI_MARK_BEGIN("correctness_check");
-    bool sort = globally_sorted(local_arr, local_size, rank, num_procs, true);
+    bool sort = globally_sorted(local_arr, local_size, rank, num_procs, debug);
     CALI_MARK_END("correctness_check");
     CALI_MARK_END("main");
 
@@ -281,7 +281,7 @@ int main(int argc, char* argv[]) {
     }
     delete local_arr;
 
-    MPI_Finalize();
+    
 
     adiak::init(NULL);
     adiak::launchdate();    // launch date of the job
@@ -298,4 +298,6 @@ int main(int argc, char* argv[]) {
     adiak::value("scalability", "strong"); // The scalability of your algorithm. choices: ("strong", "weak")
     adiak::value("group_num", 9); // The number of your group (integer, e.g., 1, 10)
     adiak::value("implementation_source", "online"); // Where you got the source code of your algorithm. choices: ("online", "ai", "handwritten").
+
+    MPI_Finalize();
 }
