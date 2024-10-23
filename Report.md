@@ -397,7 +397,7 @@ adiak::launchdate();
 adiak::libraries();  
 adiak::cmdline();       
 adiak::clustername();   
-adiak::value("algorithm", "Radix"); 
+adiak::value("algorithm", "Merge"); 
 adiak::value("programming_model", "MPI"); 
 adiak::value("data_type", "I");
 adiak::value("size_of_data_type", sizeof(int)); 
