@@ -529,6 +529,14 @@ For this implementation, on the smaller array sizes, the parallel overhead cause
 
 I was unable to get the 512 and 1024 cali files due to issues with the Grace queue and hydra errors. However, all other cali files are finished.
 
+### Radix Sort Graphs and Explanations
+
+I have not been able to generate the graphs due to the added complexity of another variable (3d vs 2d in previous labs) however I did notice a decrease in time of the alhorithm as the processor count increased. While there was an increase when moving from 1 node to many due to the network cost overall the time to completion still decreased.
+
+I was unable to generate the files for reversed sorted as the time to completion was significantly longer than the other three input types due to the excessive ammount of communication that has to occur at the splitting stage of the algorithm.
+
+all caliper files can be found at radix_sort/caliper_files
+
 ## 5. Presentation
 Plots for the presentation should be as follows:
 - For each implementation:
