@@ -342,6 +342,27 @@ All functions will be called from `main` and most will be grouped under either `
 0.001 MPI_Comm_dup
 ```
 
+### **Merge Sort Calltree**: ($2^{22} elements, 8 processors, random input)
+
+```
+2.613 main
+├─ 0.590 MPI_Comm_dup
+├─ 0.000 MPI_Comm_free
+├─ 0.000 MPI_Finalize
+├─ 0.000 MPI_Finalized
+├─ 0.000 MPI_Init
+├─ 0.000 MPI_Initialized
+├─ 0.115 comm
+│  └─ 0.115 comm_large
+│     ├─ 0.003 MPI_Barrier
+│     ├─ 0.002 MPI_Gather
+│     └─ 0.110 MPI_Scatter
+├─ 1.408 comp
+│  └─ 1.408 comp_large
+├─ 0.028 correctness_check
+└─ 0.123 data_init_runtime
+```
+
 ### 3b. Collect Metadata
 
 Have the following code in your programs to collect metadata:
