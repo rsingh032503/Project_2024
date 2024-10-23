@@ -251,7 +251,7 @@ function main():
 ```
 ### 2c. Evaluation plan - what and how will you measure and compare
 - Input sizes, Input types
-- 2^16, 2^18, 2^20, 2^22, 2^24, 2^26, 2^28; Sorted, Random, Reverse sorted, 1% perturbed
+- $2^{16}$, $2^{18}$, $2^{20}$, $2^{22}$, $2^{24}$, $2^{26}$, $2^{28}$; Sorted, Random, Reverse sorted, 1% perturbed
   
 - Strong scaling (same problem size, increase number of processors/nodes)
 - 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 processors
@@ -291,43 +291,33 @@ Required region annotations:
 
 All functions will be called from `main` and most will be grouped under either `comm` or `comp` regions, representing communication and computation, respectively. You should be timing as many significant functions in your code as possible. **Do not** time print statements or other insignificant operations that may skew the performance measurements.
 
-### **Nesting Code Regions Example** - all computation code regions should be nested in the "comp" parent code region as following:
-```
-CALI_MARK_BEGIN("comp");
-CALI_MARK_BEGIN("comp_small");
-sort_pivots(pivot_arr);
-CALI_MARK_END("comp_small");
-CALI_MARK_END("comp");
-# Other non-computation code
-...
-CALI_MARK_BEGIN("comp");
-CALI_MARK_BEGIN("comp_large");
-sort_values(arr);
-CALI_MARK_END("comp_large");
-CALI_MARK_END("comp");
-```
 
-### **Calltree Example**:
+### **Sample Sort Calltree**: ($2^{23}$ elements, 8 processors, random input)
 ```
-# MPI Mergesort
-4.695 main
-├─ 0.001 MPI_Comm_dup
+1.646 main
+├─ 0.032 MPI_Comm_dup
+├─ 0.000 MPI_Comm_free
 ├─ 0.000 MPI_Finalize
 ├─ 0.000 MPI_Finalized
 ├─ 0.000 MPI_Init
 ├─ 0.000 MPI_Initialized
-├─ 2.599 comm
-│  ├─ 2.572 MPI_Barrier
-│  └─ 0.027 comm_large
-│     ├─ 0.011 MPI_Gather
-│     └─ 0.016 MPI_Scatter
-├─ 0.910 comp
-│  └─ 0.909 comp_large
-├─ 0.201 data_init_runtime
-└─ 0.440 correctness_check
+├─ 0.276 comm
+│  ├─ 0.199 comm_large
+│  │  ├─ 0.004 MPI_Alltoallv
+│  │  ├─ 0.036 MPI_Gatherv
+│  │  └─ 0.159 MPI_Scatter
+│  └─ 0.076 comm_small
+│     ├─ 0.000 MPI_Alltoall
+│     ├─ 0.002 MPI_Bcast
+│     └─ 0.074 MPI_Gather
+├─ 0.782 comp
+│  ├─ 0.782 comp_large
+│  └─ 0.000 comp_small
+├─ 0.024 correctness_check
+└─ 0.172 data_init_runtime
 ```
 
-### **Radix Sort Calltree**: (2^16 elements, 4 processors, sorted input)
+### **Radix Sort Calltree**: ($2^{16}$ elements, 4 processors, sorted input)
 
 ```
 0.003 main
@@ -377,8 +367,66 @@ They will show up in the `Thicket.metadata` if the caliper file is read into Thi
 
 ### **See the `Builds/` directory to find the correct Caliper configurations to get the performance metrics.** They will show up in the `Thicket.dataframe` when the Caliper file is read into Thicket.
 
-### **Radix Sort Metadata**
+### **Metadata we will be collection by sorting algorithm**
 
+### Merge Sort Metadata
+```
+adiak::init(NULL);
+adiak::launchdate(); 
+adiak::libraries();  
+adiak::cmdline();       
+adiak::clustername();   
+adiak::value("algorithm", "Radix"); 
+adiak::value("programming_model", "MPI"); 
+adiak::value("data_type", "I");
+adiak::value("size_of_data_type", sizeof(int)); 
+adiak::value("input_size", total_size);
+adiak::value("input_type", input_type);
+adiak::value("num_procs", num_procs);
+adiak::value("scalability", "strong");
+adiak::value("group_num", 9);
+adiak::value("implementation_source", "online");
+```
+
+### Sample Sort Metadata
+```
+adiak::init(NULL);
+adiak::launchdate(); 
+adiak::libraries();  
+adiak::cmdline();       
+adiak::clustername();   
+adiak::value("algorithm", "Radix"); 
+adiak::value("programming_model", "MPI"); 
+adiak::value("data_type", "I");
+adiak::value("size_of_data_type", sizeof(int)); 
+adiak::value("input_size", total_size);
+adiak::value("input_type", input_type);
+adiak::value("num_procs", num_procs);
+adiak::value("scalability", "strong");
+adiak::value("group_num", 9);
+adiak::value("implementation_source", "online");
+```
+
+### Radix Sort Metadata
+```
+adiak::init(NULL);
+adiak::launchdate(); 
+adiak::libraries();  
+adiak::cmdline();       
+adiak::clustername();   
+adiak::value("algorithm", "Sample"); 
+adiak::value("programming_model", "MPI"); 
+adiak::value("data_type", "I");
+adiak::value("size_of_data_type", sizeof(int)); 
+adiak::value("input_size", total_size);
+adiak::value("input_type", input_type);
+adiak::value("num_procs", num_procs);
+adiak::value("scalability", "strong");
+adiak::value("group_num", 9);
+adiak::value("implementation_source", "online");
+```
+
+### Bitonic Sort Metadata
 ```
 adiak::init(NULL);
 adiak::launchdate(); 
@@ -404,7 +452,7 @@ Include figures and explanation of your analysis.
 
 ### 4a. Vary the following parameters
 For input_size's:
-- 2^16, 2^18, 2^20, 2^22, 2^24, 2^26, 2^28
+- $2^{16}$, $2^{18}$, $2^{20}$, $2^{22}$, $2^{24}$, $2^{26}$, $2^{28}$
 
 For input_type's:
 - Sorted, Random, Reverse sorted, 1%perturbed
