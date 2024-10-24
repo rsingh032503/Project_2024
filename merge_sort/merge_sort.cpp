@@ -7,94 +7,101 @@
 #include <adiak.hpp>
 #include <cstdlib>
 
-std::vector<int> generateRandomData(int size) {
-    std::vector<int> data(size);
-    for (int i = 0; i < size; i++) {
+void generateRandomData(int *data, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
         data[i] = rand() % size;
     }
-    return data;
 }
 
-std::vector<int> generateSortedData(int size) {
-    std::vector<int> data(size);
-    for (int i = 0; i < size; i++) {
+void generateSortedData(int *data, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
         data[i] = i;
     }
-    return data;
 }
 
-std::vector<int> generateReverseSortedData(int size) {
-    std::vector<int> data(size);
-    for (int i = 0; i < size; i++) {
+void generateReverseSortedData(int *data, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
         data[i] = size - i;
     }
-    return data;
 }
 
-std::vector<int> generateOnePercentPertubedData(int size) {
-    std::vector<int> data(size);
-    for (int i = 0; i < size; i++) {
+void generateOnePercentPertubedData(int *data, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
         data[i] = i;
     }
-    for (int i = 0; i < size / 100; i++) {
+    for (int i = 0; i < size / 100; i++)
+    {
         int index1 = rand() % size;
         int index2 = rand() % size;
         std::swap(data[index1], data[index2]);
     }
-    return data;
 }
 
-std::vector<int> merge(std::vector<int>& left, std::vector<int>& right){
-    std::vector<int> result;
+void merge(int *left, int leftSize, int *right, int rightSize, int *result)
+{
     int i = 0;
     int j = 0;
+    int k = 0;
 
-    // sort the two arrays
-    while (i < left.size() && j < right.size()){
-        if (left[i] < right[j]){
-            result.push_back(left[i]);
-            i++;
-        } else {
-            result.push_back(right[j]);
-            j++;
+    // merge arrays
+    while (i < leftSize && j < rightSize)
+    {
+        if (left[i] < right[j])
+        {
+            result[k++] = left[i++];
+        }
+        else
+        {
+            result[k++] = right[j++];
         }
     }
 
-    // append the rest of the remaining values in the arrays
-    while (i < left.size()){
-        result.push_back(left[i]);
-        i++;
+    while (i < leftSize)
+    {
+        result[k++] = left[i++];
     }
 
-    while (j < right.size()){
-        result.push_back(right[j]);
-        j++;
+    while (j < rightSize)
+    {
+        result[k++] = right[j++];
     }
-
-    return result;
 }
 
-std::vector<int> mergesort(std::vector<int>& arr){
-    // base case
-    if (arr.size() == 1){
-        return arr;
+void mergesort(int *arr, int size)
+{
+    // Base case
+    if (size < 2)
+    {
+        return;
     }
 
-    // split the array into two halves
-    std::vector<int> left(arr.begin(), arr.begin() + arr.size() / 2);
-    std::vector<int> right(arr.begin() + arr.size() / 2, arr.end());
+    int mid = size / 2;
+    int *left = new int[mid];
+    int *right = new int[size - mid];
 
-    // recursively sort the two halves
-    left = mergesort(left);
-    right = mergesort(right);
+    memcpy(left, arr, mid * sizeof(int));                 
+    memcpy(right, arr + mid, (size - mid) * sizeof(int));
 
-    // merge the two sorted halves
-    return merge(left, right);
+    // recurvsive sort
+    mergesort(left, mid);
+    mergesort(right, size - mid);
+
+    merge(left, mid, right, size - mid, arr);
+
+    delete[] left;
+    delete[] right;
 }
 
-int main(int argc, char** argv) {
-
-    // CALIPER START
+int main(int argc, char **argv)
+{
 
     cali::ConfigManager mgr;
     mgr.add("runtime-report");
@@ -108,10 +115,10 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    // Validate inputs
-
-    if (argc != 3) {
-        if (rank == 0) {
+    if (argc != 3)
+    {
+        if (rank == 0)
+        {
             std::cerr << "Usage: " << argv[0] << " <array_size_power> <input_type>" << std::endl;
             std::cerr << "Example: " << argv[0] << " 16 random" << std::endl;
             std::cerr << "Input types: random, sorted, reverse_sorted, one_percent_pertubed" << std::endl;
@@ -125,20 +132,8 @@ int main(int argc, char** argv) {
 
     const int ARRAY_SIZE = 1 << atoi(argv[1]);
     std::string input_type = argv[2];
-    std::vector<int> globalArray;
 
-    // METADATA
-
-    // std::string algorithm = "mergesort";
-    // std::string programming_model = "mpi";
-    // std::string data_type = "int";
-    // int size_of_data_type = sizeof(int);
-    // int input_size = ARRAY_SIZE;
-    // std::string input_type = "Random";
-    // int num_procs = size;
-    // std::string scalability = "strong";
-    // int group_number = 9;
-    // std::string implementation_source = "online";
+    int *globalArray = nullptr;
 
     adiak::init(NULL);
     adiak::launchdate();
@@ -156,91 +151,126 @@ int main(int argc, char** argv) {
     adiak::value("group_num", 9);
     adiak::value("implementation_source", "online");
 
-    // END METADATA
-
-    // generate random array with size ARRAY_SIZE
-    if (rank == 0) {
+    // data generation
+    if (rank == 0)
+    {
         CALI_MARK_BEGIN("data_init_runtime");
-        globalArray.resize(ARRAY_SIZE);
+        globalArray = new int[ARRAY_SIZE];
 
-        // for (int i = 0; i < ARRAY_SIZE; i++) {
-        //     globalArray[i] = rand() % ARRAY_SIZE;
-        // }
-        
-        if (input_type == "random") {
-            globalArray = generateRandomData(ARRAY_SIZE);
-        } else if (input_type == "sorted") {
-            globalArray = generateSortedData(ARRAY_SIZE);
-        } else if (input_type == "reverse_sorted") {
-            globalArray = generateReverseSortedData(ARRAY_SIZE);
-        } else if (input_type == "one_percent_pertubed") {
-            globalArray = generateOnePercentPertubedData(ARRAY_SIZE);
+        if (input_type == "random")
+        {
+            generateRandomData(globalArray, ARRAY_SIZE);
         }
-        else {
+        else if (input_type == "sorted")
+        {
+            generateSortedData(globalArray, ARRAY_SIZE);
+        }
+        else if (input_type == "reverse_sorted")
+        {
+            generateReverseSortedData(globalArray, ARRAY_SIZE);
+        }
+        else if (input_type == "one_percent_pertubed")
+        {
+            generateOnePercentPertubedData(globalArray, ARRAY_SIZE);
+        }
+        else
+        {
             std::cerr << "Invalid input type" << std::endl;
-            MPI_Abort(MPI_COMM_WORLD, 1);
+            MPI_Abort(comm, 1);
         }
 
         CALI_MARK_END("data_init_runtime");
     }
 
     int localSize = ARRAY_SIZE / size;
-    std::vector<int> localArray(localSize);
+    int *localArray = new int[localSize];
 
-    // scatter the array
     CALI_MARK_BEGIN("comm");
     CALI_MARK_BEGIN("comm_large");
-    MPI_Scatter(globalArray.data(), localSize, MPI_INT, localArray.data(), localSize, MPI_INT, 0, comm);
+    MPI_Scatter(globalArray, localSize, MPI_INT, localArray, localSize, MPI_INT, 0, comm);
     CALI_MARK_END("comm_large");
     CALI_MARK_END("comm");
 
-    // sort the local array
     CALI_MARK_BEGIN("comp");
     CALI_MARK_BEGIN("comp_large");
-    localArray = mergesort(localArray);
+    mergesort(localArray, localSize);
     CALI_MARK_END("comp_large");
     CALI_MARK_END("comp");
 
-    CALI_MARK_BEGIN("comm");
-    CALI_MARK_BEGIN("comm_large");
-    MPI_Barrier(comm);
-    CALI_MARK_END("comm_large");
-    CALI_MARK_END("comm");
+    // parallel merging of sorted arrays
+    for (int step = 1; step < size; step *= 2)
+    {
+        if (rank % (2 * step) == 0)
+        {
+            if (rank + step < size)
+            {
+                CALI_MARK_BEGIN("comm");
+                CALI_MARK_BEGIN("comm_large");
 
-    CALI_MARK_BEGIN("comm");
-    CALI_MARK_BEGIN("comm_large");
-    MPI_Gather(localArray.data(), localSize, MPI_INT, globalArray.data(), localSize, MPI_INT, 0, comm);
-    CALI_MARK_END("comm_large");
-    CALI_MARK_END("comm");
-    
-    // merge the sorted arrays from each process
-    if (rank == 0) {
-        CALI_MARK_BEGIN("comp");
-        CALI_MARK_BEGIN("comp_large");
-        for (int i = 1; i < size; i++) {
-            std::vector<int> left(globalArray.begin(), globalArray.begin() + i * localSize);
-            std::vector<int> right(globalArray.begin() + i * localSize, globalArray.begin() + (i + 1) * localSize);
-            std::vector<int> merged = merge(left, right);
-            std::copy(merged.begin(), merged.end(), globalArray.begin());
+                int recvSize = ARRAY_SIZE / (size / step);
+                int *recvArray = new int[recvSize];
+                MPI_Recv(recvArray, recvSize, MPI_INT, rank + step, 0, comm, MPI_STATUS_IGNORE);
+
+                CALI_MARK_END("comm_large");
+                CALI_MARK_END("comm");
+
+                CALI_MARK_BEGIN("comp");
+                CALI_MARK_BEGIN("comp_large");
+
+                // merge
+                int *mergedArray = new int[localSize + recvSize];
+                merge(localArray, localSize, recvArray, recvSize, mergedArray);
+
+                delete[] localArray;
+                delete[] recvArray;
+                localArray = mergedArray;
+                localSize += recvSize;
+
+                CALI_MARK_END("comp_large");
+                CALI_MARK_END("comp");
+            }
         }
-        CALI_MARK_END("comp_large");
-        CALI_MARK_END("comp");
+        else
+        {
+            CALI_MARK_BEGIN("comm");
+            CALI_MARK_BEGIN("comm_large");
 
-        // verify sorting
+            int sendToRank = rank - step;
+            MPI_Send(localArray, localSize, MPI_INT, sendToRank, 0, comm);
+
+            CALI_MARK_END("comm_large");
+            CALI_MARK_END("comm");
+
+            break;
+        }
+    }
+
+    // validation
+    if (rank == 0)
+    {
+        globalArray = localArray;
+
         CALI_MARK_BEGIN("correctness_check");
 
         bool sorted = true;
-        for (size_t i = 1; i < globalArray.size(); ++i) {
-            if (globalArray[i] < globalArray[i - 1]) {
+        for (size_t i = 1; i < ARRAY_SIZE; ++i)
+        {
+            if (globalArray[i] < globalArray[i - 1])
+            {
                 sorted = false;
-                break;
             }
         }
 
-        std::cout << "Array size: " << globalArray.size() << std::endl;
+        std::cout << "Array size: " << ARRAY_SIZE << std::endl;
         std::cout << "Array is " << (sorted ? "sorted" : "not sorted") << std::endl;
 
         CALI_MARK_END("correctness_check");
+
+        delete[] globalArray;
+    }
+    else
+    {
+        delete[] localArray;
     }
 
     MPI_Comm_free(&comm);
