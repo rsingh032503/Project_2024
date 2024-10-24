@@ -918,10 +918,10 @@ These include:
 * 2^28 input of type random on 64 and 128 processes
 * Reverse sorted for size greather than 2^20 on processors >= 64
 * Various runs on 1024 Processes
-* * 2^18 Perturbed and Random
-* * 2^22 Random
-* * 2^26 Perturbed
-* * 2^28 Sorted and Perturbed
+* * $2^{18}$ Perturbed and Random
+* * $2^{22}$ Random
+* * $2^{26}$ Perturbed
+* * $2^{28}$ Sorted and Perturbed
 
 All of these datapoints were caused due to the program hanging until it reached the time limit I set of 20 min.
 
@@ -995,15 +995,28 @@ However I make analysis on my hypothesized analysis of how the trends would look
 
 The parallel sorting implementation for bitonic sort showed varying performance across different scenarios. With small arrays, the overhead from parallelization actually increased processing time. The program became more efficient as both array sizes and processor counts grew, showing faster sorting times. The graphs demonstrate this pattern: as more processors were added, communication time per rank increased, while computation time decreased. This reflects how the workload gets divided - each processor handles a smaller portion of data but spends more time coordinating with others. The communication overhead had noticable spikes in the 64 processor measurement which were visible in the lines for the maximum times for a rank in some of the graphs for larger sizes; these clearly swayed the lines for average communication time per rank for 64 processors as well.
 
-Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 512 and 1024 processor configurations. All other performance data was successfully collected (besides maybe one or two jobs that failed to submit from my script; I will have to go back and check for these couple jobs).
+##### Times for Comm, Comp, and Main for Random Input in Large Arrays
+
+![alt text](bitonic_sort/final/random_large_arrays.png) 
+
+##### Times for Comm, Comp, and Main for Random Input in Small Arrays
+
+![alt text](bitonic_sort/final/random_small_arrays.png) 
+
+Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 1024 processor configurations. All other performance data was successfully collected (besides maybe one or two jobs that failed to submit from my script; I will have to go back and check for these couple jobs).
 
 ### Sample Sort Graphs and Explanations
 
-My implementation of sample sort had a few performance characteristics when given different processor counts and array size. With small arrays, the overhead from parallelization caused the total completion time to increase as processor count increased. As array sizes grew, there was a more expected pattern of  processor counts resulting in better performance, ie faster sorting. This makes sense given how each processor gets assigned work in my implementation. That being said there was one consistent pattern, there was an exponential decay in the computation time as the number of processors increases. This was true for all array sizes and can be explained by the fact that as we increase the number of processors, each thread has a smaller array to locally sort, resulting in an shorter time and increased performance reflected in the graphs.
+This implementation of sample sort had some interesting performance characteristics as processor count and array size varied. With small arrays, the overall trend was an expected asymptotic improvement in performance. Looking a little bit more closely however it is evident that the communication was the limiting factor. Outside of the large jump with 4 processors(likely due to a network mishap on Grace) communication time stayed roughly the same, but slightly increasing as the number of processors increase. This is contrasted with the computation performance which followed the expected asymptotic performance increase which can be explained by the fact that parallelizing code offers incredible performance upgrade to a point. This performance behaviour was mirrored for larger array sizes where there were erratic jumps in communication times but the overall trend was a slightly increasing communication time which makes sense as the number of processors increase the communication overhead also increases and when even one process gets held up by a network error, a bottleneck forms and overall communication times increases drastically. That being said, computation performance behaved as exepected, significant performance increases as we increase processor count at first and then diminishing returns as the processor count gets very large. 
 
-Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 512 and 1024 processor configurations. All other performance data was successfully collected.
+##### Times for Comm, Comp, and Main for Random Input in Large Arrays
 
-  
+![alt text](sample_sort/graphs/sample_sort_random_large.png) 
+
+##### Times for Comm, Comp, and Main for Random Input in Small Arrays
+
+![alt text](sample_sort/graphs/sample_sort_random_small.png)
+
 
 ## 5. Presentation
 
