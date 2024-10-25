@@ -4,7 +4,7 @@ processors=$1
 
 array_sizes=(16 18 20 22 24 26 28)
 
-input_type=("sorted" "reverse_sorted" "random" "perturbed")
+input_type=("reverse_sorted")
 
 # Loop through each combination
 for size in "${array_sizes[@]}"; do
@@ -12,6 +12,6 @@ for size in "${array_sizes[@]}"; do
         echo "Submitting job with array size 2^$size and $processors processors and input type $type"
         sbatch "radix_sort.grace_job_${processors}" $size $processors $type
         
-        sleep 5
+        sleep 1
     done
 done
