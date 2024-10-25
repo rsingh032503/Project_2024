@@ -10,7 +10,7 @@ processors=(2 4 8 16 32 64 128)
 for size in "${array_sizes[@]}"; do
     for proc in "${processors[@]}"; do
         echo "Submitting job with array size 2^$size and $proc processors"
-        sbatch "mpi.grace_job_${proc}" "$size" "$proc" "Random"
+        sbatch "mpi.grace_job_${proc}" "$size" "$proc" "Sorted"
         
         sleep 5
     done
