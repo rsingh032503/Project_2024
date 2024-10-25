@@ -893,9 +893,23 @@ perform runs that invoke algorithm2 for Sorted, ReverseSorted, and Random data).
 
 ### Merge Sort Graphs and Explanations
 
-For this implementation, on the smaller array sizes, the parallel overhead caused the time to increase. However, as the array size and number of processors increased, the time to sort the array decreased. When processor amounts began to get into the hundreds the parallel overhead started to take over again, and made the program slower. This can be seen in the graphs where the processor values increase the comm times per rank also increase. As the processors increased, the comp values also decreased, supporting that each processor will have less to compute as more get added.
-
 I was unable to get the 512 and 1024 cali files due to issues with the Grace queue and hydra errors. However, all other cali files are finished.
+
+This first set of graphs shows the mergesort algorithm as the number of processors are increased with random data generation. The three lines represent the largest three array sizes that were used. These are plotted with the average time per rank on the y axis and the number of processors on the x axis. Comm, comp_large, and main were all plotted separately. From the graphs it was apparent that as the number of processors increased, the time to sort the arrays decreased. It also showed that as more processors got added, the comp_large time for each processor decreased. This makes sense because the work is distributed more among multiple processes. Finally, it can be seen that as processors are increased the average communication time between the processors increased since there are more processes to communicate with.
+
+![Average values for large arrays with random input](./merge_sort/graphs/large_avg.png)
+
+The next set of graphs shows the same mergesort algorithm except using the max time per rank. It is important to look at the max time per rank because it can accurately show bottlenecks and accurately represents the runtime of the algorithm. These follow the same patterns as the previous set of graphs. As the number of processors increases, the main runtime and comp_large time decreases. Then, as the number of processes increases the communication time remains around the same.
+
+![Max values for large arrays with random input](./merge_sort/graphs/large_max.png)
+
+For the smaller array types we can see the effects of parallelizing mergesort may not always be beneficial. For these arrays, we can sort the data in usually around two seconds time. However, when it starts to get parallelized, it opens the door for overhead to impact the final time. Since it is sorting so fast, any overhead will have a significant difference. The larger arrays take a very long time to sort, and thus overhead is not as significant as on the very small arrays that sort quickly.
+
+![Average values for small arrays with random input](./merge_sort/graphs/small_avg.png)
+
+The final set of graphs compares how comm, comp_large, and main are impacted by how the array of data is before sorting. This is compared on the largest array size of 2^28. Sorted, reverse sorted, and 1% perturbed are all very similar. However, random data is a bit different. Random data has a larger comm time, comp_large time, and main time by a pretty significant margin. 
+
+![Runtimes for 2^28 array with different input types](./merge_sort/graphs/large_input_comparison.png)
 
 ### Radix Sort Graphs and Explanations
 Note: There are a few missing data points throughout the graphs 
@@ -904,10 +918,10 @@ These include:
 * 2^28 input of type random on 64 and 128 processes
 * Reverse sorted for size greather than 2^20 on processors >= 64
 * Various runs on 1024 Processes
-* * 2^18 Perturbed and Random
-* * 2^22 Random
-* * 2^26 Perturbed
-* * 2^28 Sorted and Perturbed
+* * $2^{18}$ Perturbed and Random
+* * $2^{22}$ Random
+* * $2^{26}$ Perturbed
+* * $2^{28}$ Sorted and Perturbed
 
 All of these datapoints were caused due to the program hanging until it reached the time limit I set of 20 min.
 
@@ -948,15 +962,28 @@ Similarly, for an even larger input size of 2^28, the computation dominates almo
 
 The parallel sorting implementation for bitonic sort showed varying performance across different scenarios. With small arrays, the overhead from parallelization actually increased processing time. The program became more efficient as both array sizes and processor counts grew, showing faster sorting times. The graphs demonstrate this pattern: as more processors were added, communication time per rank increased, while computation time decreased. This reflects how the workload gets divided - each processor handles a smaller portion of data but spends more time coordinating with others. The communication overhead had noticable spikes in the 64 processor measurement which were visible in the lines for the maximum times for a rank in some of the graphs for larger sizes; these clearly swayed the lines for average communication time per rank for 64 processors as well.
 
-Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 512 and 1024 processor configurations. All other performance data was successfully collected (besides maybe one or two jobs that failed to submit from my script; I will have to go back and check for these couple jobs).
+##### Times for Comm, Comp, and Main for Random Input in Large Arrays
+
+![alt text](bitonic_sort/final/random_large_arrays.png) 
+
+##### Times for Comm, Comp, and Main for Random Input in Small Arrays
+
+![alt text](bitonic_sort/final/random_small_arrays.png) 
+
+Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 1024 processor configurations. All other performance data was successfully collected (besides maybe one or two jobs that failed to submit from my script; I will have to go back and check for these couple jobs).
 
 ### Sample Sort Graphs and Explanations
 
-My implementation of sample sort had a few performance characteristics when given different processor counts and array size. With small arrays, the overhead from parallelization caused the total completion time to increase as processor count increased. As array sizes grew, there was a more expected pattern of  processor counts resulting in better performance, ie faster sorting. This makes sense given how each processor gets assigned work in my implementation. That being said there was one consistent pattern, there was an exponential decay in the computation time as the number of processors increases. This was true for all array sizes and can be explained by the fact that as we increase the number of processors, each thread has a smaller array to locally sort, resulting in an shorter time and increased performance reflected in the graphs.
+This implementation of sample sort had some interesting performance characteristics as processor count and array size varied. With small arrays, the overall trend was an expected asymptotic improvement in performance. Looking a little bit more closely however it is evident that the communication was the limiting factor. Outside of the large jump with 4 processors(likely due to a network mishap on Grace) communication time stayed roughly the same, but slightly increasing as the number of processors increase. This is contrasted with the computation performance which followed the expected asymptotic performance increase which can be explained by the fact that parallelizing code offers incredible performance upgrade to a point. This performance behaviour was mirrored for larger array sizes where there were erratic jumps in communication times but the overall trend was a slightly increasing communication time which makes sense as the number of processors increase the communication overhead also increases and when even one process gets held up by a network error, a bottleneck forms and overall communication times increases drastically. That being said, computation performance behaved as exepected, significant performance increases as we increase processor count at first and then diminishing returns as the processor count gets very large. 
 
-Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 512 and 1024 processor configurations. All other performance data was successfully collected.
+##### Times for Comm, Comp, and Main for Random Input in Large Arrays
 
-  
+![alt text](sample_sort/graphs/sample_sort_random_large.png) 
+
+##### Times for Comm, Comp, and Main for Random Input in Small Arrays
+
+![alt text](sample_sort/graphs/sample_sort_random_small.png)
+
 
 ## 5. Presentation
 
