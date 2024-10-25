@@ -913,67 +913,34 @@ All of these datapoints were caused due to the program hanging until it reached 
 
 However I make analysis on my hypothesized analysis of how the trends would look based on my understanding of MPI and radix sort.
 
-#### Main
-![alt text](radix_sort/graphs/main_16.png) 
-![alt text](radix_sort/graphs/main_18.png) 
-![alt text](radix_sort/graphs/main_20.png) 
-![alt text](radix_sort/graphs/main_22.png) 
-![alt text](radix_sort/graphs/main_24.png) 
-![alt text](radix_sort/graphs/main_26.png) 
-![alt text](radix_sort/graphs/main_28.png) 
-#### Comm
-![alt text](radix_sort/graphs/comm_16.png) 
-![alt text](radix_sort/graphs/comm_18.png) 
-![alt text](radix_sort/graphs/comm_20.png) 
-![alt text](radix_sort/graphs/comm_22.png) 
-![alt text](radix_sort/graphs/comm_24.png) 
-![alt text](radix_sort/graphs/comm_26.png) 
-![alt text](radix_sort/graphs/comm_28.png) 
-##### Comm Small
-![alt text](radix_sort/graphs/comm_small_16.png) 
-![alt text](radix_sort/graphs/comm_small_18.png) 
-![alt text](radix_sort/graphs/comm_small_20.png) 
-![alt text](radix_sort/graphs/comm_small_22.png) 
-![alt text](radix_sort/graphs/comm_small_24.png) 
-![alt text](radix_sort/graphs/comm_small_26.png) 
-![alt text](radix_sort/graphs/comm_small_28.png) 
-##### Comm Large
-![alt text](radix_sort/graphs/comm_large_16.png) 
-![alt text](radix_sort/graphs/comm_large_18.png) 
-![alt text](radix_sort/graphs/comm_large_20.png) 
-![alt text](radix_sort/graphs/comm_large_22.png) 
-![alt text](radix_sort/graphs/comm_large_24.png) 
-![alt text](radix_sort/graphs/comm_large_26.png) 
-![alt text](radix_sort/graphs/comm_large_28.png) 
+![alt text](radix_sort/graphs/multi_16.png)
 
-### Comp
-![alt text](radix_sort/graphs/comp_16.png) 
-![alt text](radix_sort/graphs/comp_18.png) 
-![alt text](radix_sort/graphs/comp_20.png) 
-![alt text](radix_sort/graphs/comp_22.png) 
-![alt text](radix_sort/graphs/comp_24.png) 
-![alt text](radix_sort/graphs/comp_26.png) 
-![alt text](radix_sort/graphs/comp_28.png) 
+For an input size of 2^16, the graph shows a clear drop in computation time as the number of processors increases from 2^1 to around 2^4, thanks to the workload being split across processors. However, beyond 2^6, the improvement slows down, and after 2^8 processors, performance actually worsens. This happens because communication between processors becomes more costly, overshadowing the benefits of parallelism. At higher processor counts, the overhead from synchronizing data between processors outweighs the speed-up, causing the overall time to increase. The algorithm performs best around 2^4 to 2^7 processors before communication overhead limits further gains.
 
-##### Comp Small
-![alt text](radix_sort/graphs/comp_small_16.png) 
-![alt text](radix_sort/graphs/comp_small_18.png) 
-![alt text](radix_sort/graphs/comp_small_20.png) 
-![alt text](radix_sort/graphs/comp_small_22.png) 
-![alt text](radix_sort/graphs/comp_small_24.png) 
-![alt text](radix_sort/graphs/comp_small_26.png) 
-![alt text](radix_sort/graphs/comp_small_28.png) 
+![alt text](radix_sort/graphs/multi_18.png)
 
-##### Comp Large
-![alt text](radix_sort/graphs/comp_large_16.png) 
-![alt text](radix_sort/graphs/comp_large_18.png) 
-![alt text](radix_sort/graphs/comp_large_20.png) 
-![alt text](radix_sort/graphs/comp_large_22.png) 
-![alt text](radix_sort/graphs/comp_large_24.png) 
-![alt text](radix_sort/graphs/comp_large_26.png) 
-![alt text](radix_sort/graphs/comp_large_28.png) 
+For the input size of 2^18, the graphs also shows an initial drop in computation time as the number of processors increases, particularly up to about 2^4, where the performance is optimized due to effective parallelism. However, beyond 2^6, the improvement becomes less significant, and after 2^8, communication overhead starts to dominate. This leads to a performance decline as the cost of synchronizing between processors increases, which outweighs the benefits of dividing the data further. The algorithm reaches its best performance around 2^4 to 2^7 processors, similar to the 2^16 case, before communication overhead causes diminishing returns.
+
+![alt text](radix_sort/graphs/multi_20.png)
+
+For the input size of 2^20, the graphs follows a similar pattern as seen in smaller input sizes. There is a significant reduction in computation time as the number of processors increases up to around 2^4, where the algorithm performs most efficiently. Beyond 2^6, the improvements begin to slow, and after 2^8, communication overhead becomes more pronounced, leading to a rise in total execution time. The increased communication and synchronization between processors, especially as they handle smaller portions of data, starts to outweigh the benefits of parallelism. As a result, the optimal performance is achieved with around 2^4 to 2^7 processors, after which the overhead from inter-processor communication reduces the overall efficiency.
+
+![alt text](radix_sort/graphs/multi_22.png)
+
+For the input size of 2^22, the graphs follows a similar pattern as seen in smaller input for processors greater than 2^6. There is a significant reduction in computation time as the number of processors increases up to around 2^4, where the algorithm performs most efficiently. Compared to the smaller inputs however, In this case before 2^6 processors the computation contributes the most to the overall time. Beyond 2^6, the improvements begin to slow, and after 2^8, communication overhead becomes more pronounced, leading to a rise in total execution time. The increased communication and synchronization between processors, especially as they handle smaller portions of data, starts to outweigh the benefits of parallelism. As a result, the optimal performance is achieved with around 2^4 to 2^7 processors, after which the overhead from inter-processor communication reduces the overall efficiency.
 
 
+![alt text](radix_sort/graphs/multi_24.png)
+
+For an input size of 2^24, the graphs shows a strong improvement in computation time as the number of processors increases up to around 2^6. In this range, the algorithm benefits greatly from parallelism, as the large input size allows efficient distribution of the workload across processors, with computation time dominating the overall performance. However, after 2^6 processors, communication costs start to take over. As the data gets divided into smaller chunks and more processors need to coordinate, the overhead from communication becomes the limiting factor, leading to slower performance. Thus, while the algorithm performs well up to 2^6 processors, the communication overhead begins to outweigh the computational gains beyond this point.
+
+![alt text](radix_sort/graphs/multi_26.png)
+
+For an input size of 2^6, the graphs show significant speed-up as the number of processors increases. In this case, computation time dominates throughout most of the range, and communication overhead becomes less of a factor compared to smaller input sizes. Even after 2^6 processors, the algorithm continues to benefit from parallelism, with communication overhead having a smaller impact because the large input size justifies the distribution of work across many processors. As a result, the performance does not degrade as quickly with increasing processors, and communication costs remain relatively low.
+
+![alt text](radix_sort/graphs/multi_28.png)
+
+Similarly, for an even larger input size of 2^28, the computation dominates almost entirely. The benefits of parallelism continue even beyond 2^6 processors, and communication overhead takes up an even smaller portion of the total execution time. The large input size provides enough work for each processor, meaning that the communication between processors has an even lesser impact on performance. Therefore, the algorithm scales better with the increasing number of processors, and the overall efficiency remains high, even with a larger number of processors.
 
 
 
