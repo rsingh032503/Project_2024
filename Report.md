@@ -898,11 +898,84 @@ For this implementation, on the smaller array sizes, the parallel overhead cause
 I was unable to get the 512 and 1024 cali files due to issues with the Grace queue and hydra errors. However, all other cali files are finished.
 
 ### Radix Sort Graphs and Explanations
+Note: There are a few missing data points throughout the graphs 
 
-I have not been able to generate the graphs due to the added complexity of another variable (3d vs 2d in previous labs) however I did notice a decrease in time of the alhorithm as the processor count increased. While there was an increase when moving from 1 node to many due to the network cost overall the time to completion still decreased. Overall the sorted and perturbed input types performed very simmilarly due to the data being roughly the same. The next slowest was random where roughly 1 / number of processors data stayed local to a processor where everything else got moved to another processor. Lastly the slowest was reverse sorted as every piece of data had to be transfered to another processor causing significant communication times.
+These include: 
+* 2^28 input of type random on 64 and 128 processes
+* Reverse sorted for size greather than 2^20 on processors >= 64
+* Various runs on 1024 Processes
+* * 2^18 Perturbed and Random
+* * 2^22 Random
+* * 2^26 Perturbed
+* * 2^28 Sorted and Perturbed
 
-I was unable to generate the files for reversed sorted as the time to completion was significantly longer than the other three input types due to the excessive ammount of communication that has to occur at the splitting stage of the algorithm.
-all caliper files can be found at radix_sort/caliper_files
+All of these datapoints were caused due to the program hanging until it reached the time limit I set of 20 min.
+
+However I make analysis on my hypothesized analysis of how the trends would look based on my understanding of MPI and radix sort.
+
+#### Main
+![alt text](radix_sort/graphs/main_16.png) 
+![alt text](radix_sort/graphs/main_18.png) 
+![alt text](radix_sort/graphs/main_20.png) 
+![alt text](radix_sort/graphs/main_22.png) 
+![alt text](radix_sort/graphs/main_24.png) 
+![alt text](radix_sort/graphs/main_26.png) 
+![alt text](radix_sort/graphs/main_28.png) 
+#### Comm
+![alt text](radix_sort/graphs/comm_16.png) 
+![alt text](radix_sort/graphs/comm_18.png) 
+![alt text](radix_sort/graphs/comm_20.png) 
+![alt text](radix_sort/graphs/comm_22.png) 
+![alt text](radix_sort/graphs/comm_24.png) 
+![alt text](radix_sort/graphs/comm_26.png) 
+![alt text](radix_sort/graphs/comm_28.png) 
+##### Comm Small
+![alt text](radix_sort/graphs/comm_small_16.png) 
+![alt text](radix_sort/graphs/comm_small_18.png) 
+![alt text](radix_sort/graphs/comm_small_20.png) 
+![alt text](radix_sort/graphs/comm_small_22.png) 
+![alt text](radix_sort/graphs/comm_small_24.png) 
+![alt text](radix_sort/graphs/comm_small_26.png) 
+![alt text](radix_sort/graphs/comm_small_28.png) 
+##### Comm Large
+![alt text](radix_sort/graphs/comm_large_16.png) 
+![alt text](radix_sort/graphs/comm_large_18.png) 
+![alt text](radix_sort/graphs/comm_large_20.png) 
+![alt text](radix_sort/graphs/comm_large_22.png) 
+![alt text](radix_sort/graphs/comm_large_24.png) 
+![alt text](radix_sort/graphs/comm_large_26.png) 
+![alt text](radix_sort/graphs/comm_large_28.png) 
+
+### Comp
+![alt text](radix_sort/graphs/comp_16.png) 
+![alt text](radix_sort/graphs/comp_18.png) 
+![alt text](radix_sort/graphs/comp_20.png) 
+![alt text](radix_sort/graphs/comp_22.png) 
+![alt text](radix_sort/graphs/comp_24.png) 
+![alt text](radix_sort/graphs/comp_26.png) 
+![alt text](radix_sort/graphs/comp_28.png) 
+
+##### Comp Small
+![alt text](radix_sort/graphs/comp_small_16.png) 
+![alt text](radix_sort/graphs/comp_small_18.png) 
+![alt text](radix_sort/graphs/comp_small_20.png) 
+![alt text](radix_sort/graphs/comp_small_22.png) 
+![alt text](radix_sort/graphs/comp_small_24.png) 
+![alt text](radix_sort/graphs/comp_small_26.png) 
+![alt text](radix_sort/graphs/comp_small_28.png) 
+
+##### Comp Large
+![alt text](radix_sort/graphs/comp_large_16.png) 
+![alt text](radix_sort/graphs/comp_large_18.png) 
+![alt text](radix_sort/graphs/comp_large_20.png) 
+![alt text](radix_sort/graphs/comp_large_22.png) 
+![alt text](radix_sort/graphs/comp_large_24.png) 
+![alt text](radix_sort/graphs/comp_large_26.png) 
+![alt text](radix_sort/graphs/comp_large_28.png) 
+
+
+
+
 
 ### Bitonic Sort Graphs and Explanations
 
