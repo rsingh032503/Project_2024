@@ -981,7 +981,11 @@ However I make analysis on my hypothesized analysis of how the trends would look
 
 The parallel sorting implementation for bitonic sort showed varying performance across different scenarios. With small arrays, the overhead from parallelization actually increased processing time. The program became more efficient as both array sizes and processor counts grew, showing faster sorting times. The graphs demonstrate this pattern: as more processors were added, communication time per rank increased, while computation time decreased. This reflects how the workload gets divided - each processor handles a smaller portion of data but spends more time coordinating with others. The communication overhead had noticable spikes in the 64 processor measurement which were visible in the lines for the maximum times for a rank in some of the graphs for larger sizes; these clearly swayed the lines for average communication time per rank for 64 processors as well.
 
-Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 512 and 1024 processor configurations. All other performance data was successfully collected (besides maybe one or two jobs that failed to submit from my script; I will have to go back and check for these couple jobs).
+##### Times for Comm, Comp, and Main for Random Input in Large Arrays
+
+![alt text](bitonic_sort/final/random_large_arrays.png) 
+
+Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 1024 processor configurations. All other performance data was successfully collected (besides maybe one or two jobs that failed to submit from my script; I will have to go back and check for these couple jobs).
 
 ### Sample Sort Graphs and Explanations
 
