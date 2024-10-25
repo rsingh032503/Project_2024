@@ -985,6 +985,10 @@ The parallel sorting implementation for bitonic sort showed varying performance 
 
 ![alt text](bitonic_sort/final/random_large_arrays.png) 
 
+##### Times for Comm, Comp, and Main for Random Input in Small Arrays
+
+![alt text](bitonic_sort/final/random_small_arrays.png) 
+
 Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 1024 processor configurations. All other performance data was successfully collected (besides maybe one or two jobs that failed to submit from my script; I will have to go back and check for these couple jobs).
 
 ### Sample Sort Graphs and Explanations
