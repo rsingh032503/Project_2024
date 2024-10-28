@@ -891,25 +891,35 @@ perform runs that invoke algorithm2 for Sorted, ReverseSorted, and Random data).
     - Total time
     - Variance time/rank
 
-### Merge Sort Graphs and Explanations
+### Merge Sort Graphs and Analysis
 
-I was unable to get the 512 and 1024 cali files due to issues with the Grace queue and hydra errors. However, all other cali files are finished.
-
-This first set of graphs shows the mergesort algorithm as the number of processors are increased with random data generation. The three lines represent the largest three array sizes that were used. These are plotted with the average time per rank on the y axis and the number of processors on the x axis. Comm, comp_large, and main were all plotted separately. From the graphs it was apparent that as the number of processors increased, the time to sort the arrays decreased. It also showed that as more processors got added, the comp_large time for each processor decreased. This makes sense because the work is distributed more among multiple processes. Finally, it can be seen that as processors are increased the average communication time between the processors increased since there are more processes to communicate with.
+This first set of graphs shows the merge sort algorithm with strong scaling and random data generation. The three lines represent the largest three array sizes that were used (2^22, 2^24, 2^26). These are plotted with the average time per rank on the y axis and the number of processors on the x axis. Comm, comp_large, and main were all plotted separately. From the graphs it was apparent that as the number of processors increased, the time to sort the large arrays decreased. It also showed that as more processors got added, the comp_large time for each processor decreased. This makes sense because the work is distributed more among multiple processes. This allows each processor to do less computation. Finally, as processors are increased the average communication time began to rise since there are more processes to communicate with. 
 
 ![Average values for large arrays with random input](./merge_sort/graphs/large_avg.png)
 
-The next set of graphs shows the same mergesort algorithm except using the max time per rank. It is important to look at the max time per rank because it can accurately show bottlenecks and accurately represents the runtime of the algorithm. These follow the same patterns as the previous set of graphs. As the number of processors increases, the main runtime and comp_large time decreases. Then, as the number of processes increases the communication time remains around the same.
+The next set of graphs shows the same merge sort algorithm with strong scaling and random data generation except with the max time per rank. It is important to look at the max time per rank because it can accurately show bottlenecks and accurately represents the runtime of the algorithm since it is the worst case. These follow the same patterns as the previous set of graphs. As the number of processors increases, the main runtime and comp_large time decreases. Then, as the number of processes increases the communication time remains around the same.
 
 ![Max values for large arrays with random input](./merge_sort/graphs/large_max.png)
 
-For the smaller array types we can see the effects of parallelizing mergesort may not always be beneficial. For these arrays, we can sort the data in usually around two seconds time. However, when it starts to get parallelized, it opens the door for overhead to impact the final time. Since it is sorting so fast, any overhead will have a significant difference. The larger arrays take a very long time to sort, and thus overhead is not as significant as on the very small arrays that sort quickly.
+For the smaller array types we can see the effects of parallelizing merge sort may not always be beneficial. For these arrays, we can sort the data in usually around two seconds time. However, when it starts to get parallelized, it opens the door for overhead to impact the final time. Since it is sorting so fast, any overhead will have a significant difference. The larger arrays take a very long time to sort, and thus overhead is not as significant as on the very small arrays that sort quickly. We can see this with the spikes in the communication time. Although small, these times have a significant contribution to the overall time of the sort because the array is being sorted so quickly. This in comparison with the prior graphs show a trade-off when using parallel merge sort. For large arrays, the computational benefit is greater than the communication overhead. However, with small arrays, this communication overhead is greater than the computational benefit, and actually ends up making the sorting process slower. 
 
-![Average values for small arrays with random input](./merge_sort/graphs/small_avg.png)
+![Max values for small arrays with random input](./merge_sort/graphs/small_max.png)
 
-The final set of graphs compares how comm, comp_large, and main are impacted by how the array of data is before sorting. This is compared on the largest array size of 2^28. Sorted, reverse sorted, and 1% perturbed are all very similar. However, random data is a bit different. Random data has a larger comm time, comp_large time, and main time by a pretty significant margin. 
+This set of graphs shows the speedup for each of the sorted input types for every size of array. The smaller arrays don't have much speedup at all, and some even seem to get slower. This can be attributed to any significant overhead due to the short time it takes to sort these arrays. However, the large arrays start to see significant speedups, with the 2^28 sized array peaking at over ten times as fast. The randomly sorted arrays also have a worse speedup compared to the other input types. This is likely due to the unpredictable nature of the array, and causes more communication overhead.
+
+![Strong speedup for all arrays and input types](./merge_sort/graphs/strong_speedup.png)
+
+Weak scaling for main and comm times can be seen in these two graphs. The linear line for main suggests that it may not have scaled as well as it should have. For main, each of the four input types scaled the same. However, for communication it is a bit different. The random input type was an outlier and scaled worse than the other three. This is likely due to more communication overhead as a result of the unpredictable nature of the array.
+
+![Weak scaling for main and comm times](./merge_sort/graphs/weak_scaling.png)
+
+These next set of graphs shows strong scaling for comm, comp_large, and main for a 2^28 size array for each of the four input types. Sorted, reverse sorted, and 1% perturbed are all similar. However, random data has a constant difference with each processor count.
 
 ![Runtimes for 2^28 array with different input types](./merge_sort/graphs/large_input_comparison.png)
+
+This final set of graphs shows strong scaling for comm, comp_large, and main for a 2^16 size array for each of the four input types. These are similar to the previous graphs, in which random had constant spacing between the other three. However, for main, there was not this constant difference. This is likely due to the fact that the array was not large enough for the computational overhead to create that constant difference in time. As the array size grows, it is expected that the constant between random and the other three input types in the main runtime would also grow.
+
+![Runtimes for 2^16 array with different input types](./merge_sort/graphs/small_input_comparison.png)
 
 ### Radix Sort Graphs and Explanations
 Note: There are a few missing data points throughout the graphs 

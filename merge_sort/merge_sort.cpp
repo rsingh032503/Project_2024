@@ -87,7 +87,7 @@ void mergesort(int *arr, int size)
     int *left = new int[mid];
     int *right = new int[size - mid];
 
-    memcpy(left, arr, mid * sizeof(int));                 
+    memcpy(left, arr, mid * sizeof(int));
     memcpy(right, arr + mid, (size - mid) * sizeof(int));
 
     // recurvsive sort
@@ -217,7 +217,6 @@ int main(int argc, char **argv)
                 CALI_MARK_BEGIN("comp");
                 CALI_MARK_BEGIN("comp_large");
 
-                // merge
                 int *mergedArray = new int[localSize + recvSize];
                 merge(localArray, localSize, recvArray, recvSize, mergedArray);
 
