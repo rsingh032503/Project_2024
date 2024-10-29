@@ -1014,7 +1014,7 @@ Another thing to note is that the large input sizes have a better overall speedu
 - Less benefit from parallelization
 - Some cases show worse performance with more processes
 
-#### Key Insights from Strong Scaling graphs above
+##### Key Insights from Strong Scaling graphs above
 
 ##### 1. Scalability
 - The algorithm scales better with larger input sizes
@@ -1036,7 +1036,7 @@ Another thing to note is that the large input sizes have a better overall speedu
 - Too many processes can degrade performance, especially for smaller inputs
 - Communication overhead eventually becomes the limiting factor
 
-#### Strong Scaling Analysis of Parallel Sorting Algorithm
+#### Strong Scaling Speedup Analysis of Bitonic Sort
 
 ![alt text](bitonic_sort/final/strong_scaling_inputs.png) 
 
@@ -1056,7 +1056,7 @@ Each dataset is tested with varying input sizes (2^16 to 2^28) and process count
 
 2. **Consistent Patterns Across Input Types**
    - All four input arrangements (random, sorted, reverse sorted, perturbed) show remarkably similar scaling patterns
-   - This suggests the algorithm's performance is stable regardless of input arrangement which is interesting because it should be easier to form bitonic sequences with sorted and reverse sorted inputs than random and perturbed inputs.
+   - This suggests the algorithm's performance is stable regardless of input arrangement which is interesting because it should be easier to form bitonic sequences with sorted and reverse sorted inputs than random and perturbed inputs. This might be something worth looking into in my implementation of the bitonic sort algorithm.
 
 ##### Scaling Characteristics
 
@@ -1086,6 +1086,45 @@ Each dataset is tested with varying input sizes (2^16 to 2^28) and process count
    - Strong scaling efficiency decreases with increasing process count
    - The largest datasets maintain the best efficiency
    - Input arrangement has minimal impact on scaling behavior
+
+#### Weak Scaling Analysis of Bitonic Sort
+
+![alt text](bitonic_sort/final/weak_scaling.png) 
+
+##### Overview
+The graphs show weak scaling measurements for both overall execution time (main) and communication time (comm) across four different input arrangements:
+- Random data
+- Sorted data
+- Reverse sorted data
+- Perturbed data
+
+##### Main Execution Time
+1. **Similar Scaling Patterns**
+  - All input arrangements show nearly identical weak scaling behavior
+  - Execution time increases non-linearly with process count
+  - Dramatic increase between 16 and 32 processes, reaching ~35-40x
+
+2. **Input Arrangement Impact**
+  - Random data shows slightly worse scaling at 32 processes
+  - Other arrangements (sorted, reverse sorted, perturbed) perform almost identically
+  - Differences are minimal until the highest process count
+
+##### Communication Time
+1. **Divergent Behavior**
+  - Random data shows significantly higher communication overhead at 32 processes
+  - Other input arrangements maintain relatively similar communication patterns
+  - Communication time increases more gradually than overall execution time
+
+2. **Scaling Characteristics**
+  - Communication overhead remains minimal up to 8 processes
+  - Notable increase starts at 16 processes
+  - Random data shows steepest increase in communication time
+
+##### Practical Implications
+- Weak scaling efficiency decreases significantly at higher process counts
+- Communication becomes a major bottleneck beyond 16 processes
+- Random data arrangements may require special consideration for large-scale deployments
+- The algorithm shows best efficiency at lower process counts (≤ 8)
 
 Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 1024 processor configurations. All other performance data was successfully collected (besides maybe one or two jobs that failed to submit from my script; I will have to go back and check for these couple jobs).
 
