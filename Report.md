@@ -996,15 +996,39 @@ Note: Due to technical limitations with the Grace queue and hydra errors, I coul
 
 ### Sample Sort Graphs and Explanations
 
-This implementation of sample sort had some interesting performance characteristics as processor count and array size varied. With small arrays, the overall trend was an expected asymptotic improvement in performance. Looking a little bit more closely however it is evident that the communication was the limiting factor. Outside of the large jump with 4 processors(likely due to a network mishap on Grace) communication time stayed roughly the same, but slightly increasing as the number of processors increase. This is contrasted with the computation performance which followed the expected asymptotic performance increase which can be explained by the fact that parallelizing code offers incredible performance upgrade to a point. This performance behaviour was mirrored for larger array sizes where there were erratic jumps in communication times but the overall trend was a slightly increasing communication time which makes sense as the number of processors increase the communication overhead also increases and when even one process gets held up by a network error, a bottleneck forms and overall communication times increases drastically. That being said, computation performance behaved as exepected, significant performance increases as we increase processor count at first and then diminishing returns as the processor count gets very large. 
+#### Strong Scaling
+This implementation of sample sort had some interesting performance characteristics as processor count and array size varied. With small arrays, the overall trend was an expected asymptotic improvement in performance. Looking a little bit more closely however it is evident that the communication was the limiting factor. Outside of the large jump with 4 processors(likely due to a network mishap on Grace) communication time stayed roughly the same, but slightly increasing as the number of processors increase. This is contrasted with the computation performance which followed the expected asymptotic performance increase which can be explained by the fact that parallelizing code offers incredible performance upgrade to a point. This performance behaviour was mirrored for larger array sizes where the overall trend was a slightly increasing communication time which makes sense as the number of processors increase the communication overhead also increases as when even one process gets held up by a network error, a bottleneck forms and overall communication times increases drastically. That being said, computation performance behaved as exepected, significant performance increases as we increase processor count at first and then diminishing returns as the processor count gets very large. 
 
-##### Times for Comm, Comp, and Main for Random Input in Large Arrays
+##### Strong Scaling - Random Input in Large Arrays ($2^{24}$ - $2^{28}$)
 
-![alt text](sample_sort/graphs/sample_sort_random_large.png) 
+![alt text](sample_sort/graphs/strong_random_large.png) 
 
-##### Times for Comm, Comp, and Main for Random Input in Small Arrays
+##### Strong Scaling - Random Input in Small Arrays ($2^{16}$ - $2^{20}$)
 
-![alt text](sample_sort/graphs/sample_sort_random_small.png)
+![alt text](sample_sort/graphs/strong_random_small.png)
+
+
+#### Weak Scaling
+The weak scaling plots below show that as the input size increases, the average time per rank also increases, but at a much slower rate when using more parallel processes. For the 2-process case, the time per rank grows exponentially with input size, indicating poor weak scaling. However, the 4-process and 16-process cases show a much flatter curve, suggesting the parallelized implementation is able to effectively distribute the workload and maintain reasonable performance as the problem size grows. This indicates the algorithm has good weak scaling properties, which is an important characteristic for efficiently processing large datasets in high-performance computing.
+
+##### Weak Scaling for Random Input in Large Arrays ($2^{24}$ - $2^{28}$)
+
+![alt text](sample_sort/graphs/weak_random_large.png) 
+
+
+#### Input Type Performance Comparison
+There was performance differences observed for the parallelized sample sort implementation with different input types (sorted, reverse, 1% perturbed, and random) which I hypothesize to be attributed to a few key factors:
+- Presortedness: For sorted and reverse-sorted data, the initial local sorting step performed by each rank is trivial, as the data is already in the correct order. This allows the algorithm to quickly progress to the sample selection and splitting phases. In contrast, for random and perturbed data, the local sorting step is more computationally expensive, leading to higher overall runtimes.
+- Sample Selection: The algorithm relies on selecting regular samples from the locally sorted data to determine the splitters for the final distribution. For sorted and reverse-sorted data, the samples will be evenly spaced, allowing for efficient splitting. However, for random and perturbed data, the samples may be less evenly distributed, resulting in less optimal splitting points and potentially more unbalanced data distribution among the ranks.
+- Communication Patterns: The all-to-all communication phase, where ranks exchange their sorted data segments, is likely to be more efficient for sorted and reverse-sorted data. The data being exchanged will be more contiguous, leading to better utilization of network bandwidth and lower communication overhead. For random and perturbed data, the communication patterns may be more irregular, resulting in increased latency and lower overall throughput.
+- Load Balancing: The final local sorting step may also be more efficient for sorted and reverse-sorted data, as the distribution of elements among the ranks is likely to be more balanced. For random and perturbed data, the distribution may be more skewed, leading to some ranks having significantly more work to do during the final sorting phase, potentially causing load imbalances and reduced parallel efficiency.
+
+##### Comparing performance across input types in a Large Array $2^{28}$ 
+
+![alt text](sample_sort/graphs/input_type_28.png) 
+
+#### Speedup
+![alt text](sample_sort/graphs/speedup.png)
 
 
 ## 5. Presentation
