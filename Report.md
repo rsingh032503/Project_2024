@@ -1036,6 +1036,57 @@ Another thing to note is that the large input sizes have a better overall speedu
 - Too many processes can degrade performance, especially for smaller inputs
 - Communication overhead eventually becomes the limiting factor
 
+#### Strong Scaling Analysis of Parallel Sorting Algorithm
+
+![alt text](bitonic_sort/final/strong_scaling_inputs.png) 
+
+##### Overview
+The above graphs show strong scaling speedup measurements across four different input arrangements:
+- Random data
+- Pre-sorted data
+- Reverse sorted data
+- Perturbed data
+
+Each dataset is tested with varying input sizes (2^16 to 2^28) and process counts (2^2 to 2^8).
+
+##### General Trends
+1. **Larger Inputs Show Better Speedup**
+   - The largest inputs consistently achieve the best speedup, reaching nearly 3x
+   - Smaller inputs show poor scaling, with performance degrading as processes increase
+
+2. **Consistent Patterns Across Input Types**
+   - All four input arrangements (random, sorted, reverse sorted, perturbed) show remarkably similar scaling patterns
+   - This suggests the algorithm's performance is stable regardless of input arrangement which is interesting because it should be easier to form bitonic sequences with sorted and reverse sorted inputs than random and perturbed inputs.
+
+##### Scaling Characteristics
+
+1. **Small Data Sets**
+   - Show poor scaling beyond 4 processes
+   - Performance actually degrades with more processes
+   - Communication overhead likely exceeds computational benefits
+
+2. **Medium Data Sets**
+   - Show moderate scaling up to 16 processes
+   - Performance plateaus or degrades beyond that point
+   - Demonstrates the limits of strong scaling for medium-sized problems
+
+3. **Large Data Sets**
+   - Maintain positive scaling up to 256 processes
+   - Achieve best overall speedup (close to 3x)
+   - Show signs of plateauing at highest process counts
+
+##### Practical Implications
+
+1. **Resource Allocation**
+   - Small inputs should use 4 or fewer processes
+   - Large inputs benefit from higher process counts
+   - No significant benefit beyond 256 processes for any dataset size
+
+2. **Efficiency Considerations**
+   - Strong scaling efficiency decreases with increasing process count
+   - The largest datasets maintain the best efficiency
+   - Input arrangement has minimal impact on scaling behavior
+
 Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 1024 processor configurations. All other performance data was successfully collected (besides maybe one or two jobs that failed to submit from my script; I will have to go back and check for these couple jobs).
 
 ### Sample Sort Graphs and Explanations
