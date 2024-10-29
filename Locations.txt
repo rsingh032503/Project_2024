@@ -3,3 +3,9 @@ Brandon Thomas - Radix Sort
     graphs - radix_sort/graphs/
     caliper files - radix_sort/caliper_files/
     Jupyter notebook - radix_sort/radix_sort_analysis.ipynb
+
+Anthony Ciardelli - Merge Sort
+    src - merge_sort/merge_sort.cpp
+    graphs - merge_sort/graphs/
+    cali files - merge_sort/final_cali/
+    Jupyter Notebook - merge_sort/report_notebook.ipynb
