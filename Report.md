@@ -937,6 +937,7 @@ All of these datapoints were caused due to the program hanging until it reached 
 
 However I make analysis on my hypothesized analysis of how the trends would look based on my understanding of MPI and radix sort.
 
+#### Strong Scaling
 ![alt text](radix_sort/graphs/multi_16.png)
 
 For an input size of 2^16, the graph shows a clear drop in computation time as the number of processors increases from 2^1 to around 2^4, thanks to the workload being split across processors. However, beyond 2^6, the improvement slows down, and after 2^8 processors, performance actually worsens. This happens because communication between processors becomes more costly, overshadowing the benefits of parallelism. At higher processor counts, the overhead from synchronizing data between processors outweighs the speed-up, causing the overall time to increase. The algorithm performs best around 2^4 to 2^7 processors before communication overhead limits further gains.
@@ -966,8 +967,19 @@ For an input size of 2^6, the graphs show significant speed-up as the number of 
 
 Similarly, for an even larger input size of 2^28, the computation dominates almost entirely. The benefits of parallelism continue even beyond 2^6 processors, and communication overhead takes up an even smaller portion of the total execution time. The large input size provides enough work for each processor, meaning that the communication between processors has an even lesser impact on performance. Therefore, the algorithm scales better with the increasing number of processors, and the overall efficiency remains high, even with a larger number of processors.
 
+#### Weak Scaling
+![alt text](radix_sort/graphs/weak_scaling.png)
 
+When looking at the Comp graph above, it can be noted that as the input size scales with the number of processors it the time to sort the local graph stays fairly consistent, except for the random which is probably due to unstable runs with inacurate data. However when looking at the communication there is a significant increase after 32 processors as once you excede the capacity of a single node there is a significant overhead that gets added due to network communication. This is shown int the last graph for main as the time stays relatively the same then has a large spike after the 2^6 mark where the number of processors can no longer fit on a single node.
 
+#### Speedup
+![alt text](radix_sort/graphs/speedup.png)
+
+In the first graph, the computational speedup (comp) increases consistently with input size, showing that parallelization effectively distributes the workload across processors. As the input size grows, the computational tasks scale well, with near-linear speedup for larger datasets. For smaller data sizes, the speedup is limited due to overheads, but the overall trend shows that the parallelized computation remains efficient, especially with larger data inputs where the workload per processor becomes significant.
+
+In contrast, the communication speedup (comm) in the second graph declines as the input size increases, indicating that communication overhead becomes a bottleneck for larger datasets. The need for frequent data exchanges between processors in MPI-based radix sort negatively affects performance, especially for large inputs, where the communication costs dominate. The overall speedup (main) reflects a combination of these two factors—strong computational speedup boosts performance, but increasing communication overhead limits the benefits, especially for large data sizes where the algorithm's efficiency is constrained by the communication time.
+
+Another thing to note is that the large input sizes have a better overall speedup because they are affected at the lower processors ad have room to gain time when adding more processors. For the smaller input sizes the smaller number of processors is already sufficiently fast at sorting, so when the number of processors goes up the overhead for communication makes the algorithm take longer than when it had less processors.
 ### Bitonic Sort Graphs and Explanations
 
 The parallel sorting implementation for bitonic sort showed varying performance across different scenarios. With small arrays, the overhead from parallelization actually increased processing time. The program became more efficient as both array sizes and processor counts grew, showing faster sorting times. The graphs demonstrate this pattern: as more processors were added, communication time per rank increased, while computation time decreased. This reflects how the workload gets divided - each processor handles a smaller portion of data but spends more time coordinating with others. The communication overhead had noticable spikes in the 64 processor measurement which were visible in the lines for the maximum times for a rank in some of the graphs for larger sizes; these clearly swayed the lines for average communication time per rank for 64 processors as well.
