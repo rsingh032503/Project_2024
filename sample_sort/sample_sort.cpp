@@ -1,4 +1,4 @@
- #include <mpi.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
@@ -79,11 +79,6 @@ int main(int argc, char** argv) {
       }
     }
     
-
-
-    
-    
-
     // Create duplicate communicator
     MPI_Comm comm_dup;
     MPI_Comm_dup(MPI_COMM_WORLD, &comm_dup);

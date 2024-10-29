@@ -9,3 +9,9 @@ Anthony Ciardelli - Merge Sort
     graphs - merge_sort/graphs/
     cali files - merge_sort/final_cali/
     Jupyter Notebook - merge_sort/report_notebook.ipynb
+
+Kevin Thomas - Sample Sort
+    src - sample_sort/sample_sort.cpp
+    graphs - sample_sort/graphs/
+    cali files - sample_sort/final_cali/
+    Jupyter Notebook - sample_sort/report.ipynb
