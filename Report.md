@@ -982,15 +982,59 @@ In contrast, the communication speedup (comm) in the second graph declines as th
 Another thing to note is that the large input sizes have a better overall speedup because they are affected at the lower processors and have room to reduce the wall clock when adding more processors. For the smaller input sizes the smaller number of processors is already sufficiently fast at sorting, so when the number of processors goes up the overhead for communication makes the algorithm take longer than when it had less processors.
 ### Bitonic Sort Graphs and Explanations
 
-The parallel sorting implementation for bitonic sort showed varying performance across different scenarios. With small arrays, the overhead from parallelization actually increased processing time. The program became more efficient as both array sizes and processor counts grew, showing faster sorting times. The graphs demonstrate this pattern: as more processors were added, communication time per rank increased, while computation time decreased. This reflects how the workload gets divided - each processor handles a smaller portion of data but spends more time coordinating with others. The communication overhead had noticable spikes in the 64 processor measurement which were visible in the lines for the maximum times for a rank in some of the graphs for larger sizes; these clearly swayed the lines for average communication time per rank for 64 processors as well.
-
-##### Times for Comm, Comp, and Main for Random Input in Large Arrays
+#### Strong Scaling - Random Input in Large Arrays ($2^{24}$ - $2^{28}$)
 
 ![alt text](bitonic_sort/final/random_large_arrays.png) 
 
-##### Times for Comm, Comp, and Main for Random Input in Small Arrays
+##### Communication Time
+- Shows an upward trend as processes increase
+- Larger input sizes (2^28) experience significantly higher communication costs
+- Communication time stabilizes after reaching about 2^4 processes
+
+##### Computation Time
+- Shows a clear downward trend with more processes
+- Initial computation time is much higher for larger inputs (2^28)
+- Diminishing returns after about 2^6 processes
+- Nearly converges for all input sizes at high process counts
+
+##### Overall Execution Time
+- Similar pattern to computation time but with higher absolute times
+- Demonstrates the classic parallel computing trade-off: reduced computation time vs. increased communication overhead
+
+#### Strong Scaling - Random Input in Large Arrays ($2^{24}$ - $2^{28}$)
 
 ![alt text](bitonic_sort/final/random_small_arrays.png) 
+
+##### Communication Patterns
+- Shows spikes at higher process counts
+- Less predictable behavior compared to larger inputs
+
+##### Computation and Overall Times
+- Much smaller absolute times compared to larger inputs
+- Less benefit from parallelization
+- Some cases show worse performance with more processes
+
+#### Key Insights from Strong Scaling graphs above
+
+##### 1. Scalability
+- The algorithm scales better with larger input sizes
+- Smaller inputs don't benefit as much from parallelization due to overhead
+- Sweet spot for parallelization depends on input size
+
+##### 2. Communication Bottleneck
+- Communication overhead becomes more significant with more processes
+- Larger inputs can better amortize this overhead
+- Smaller inputs are dominated by communication costs at high process counts
+
+##### 3. Practical Implications
+- For small arrays (2^16 - 2^20), using fewer processes might be more efficient
+- Large arrays (2^24 - 2^28) benefit significantly from parallelization
+- Need to balance process count with input size for optimal performance
+
+##### 4. Efficiency Considerations
+- The ideal number of processes varies with input size
+- Too many processes can degrade performance, especially for smaller inputs
+- Communication overhead eventually becomes the limiting factor
 
 Note: Due to technical limitations with the Grace queue and hydra errors, I couldn't generate results for the 1024 processor configurations. All other performance data was successfully collected (besides maybe one or two jobs that failed to submit from my script; I will have to go back and check for these couple jobs).
 
