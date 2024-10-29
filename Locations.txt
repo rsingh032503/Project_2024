@@ -1,3 +1,9 @@
+Rahul Singh - Bitonic Sort
+    src - bitonic_sort/bitonic_sort.cpp
+    graphs - bitonic_sort/graphs/
+    caliper files - bitonic_sort/final/
+    Jupyter notebook - bitonic_sort/notebooks/
+
 Brandon Thomas - Radix Sort
     src - radix_sort/radix_sort.cpp
     graphs - radix_sort/graphs/
